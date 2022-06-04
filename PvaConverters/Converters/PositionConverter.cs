@@ -23,10 +23,18 @@ namespace PvaConverters.Converters
         }
 
         #endregion
-        
+
         #region Geo
 
         public EcefPosition GeoToEcef(GeoPosition geo, Datum datum = null)
+        {
+            double lat = geo.Latitude.Radians;
+            double lon = geo.Longitude.Radians;
+            double alt = geo.Altitude.Meters;
+            return GeoToEcef(lat, lon, alt);
+        }
+    
+        public EcefPosition GeoToEcef(double latRad,double  lonRad, double altMeters, Datum datum = null)
         {
             if (datum == null)
             {
@@ -36,22 +44,18 @@ namespace PvaConverters.Converters
             double f = datum.Flattening;
             double majorAxis = datum.SemiMajorAxis;
 
-            double lat = geo.Latitude.Radians;
-            double lon = geo.Longitude.Radians;
-            double alt = geo.Altitude.Meters;
+            double cosLat = Math.Cos(latRad);
+            double sinLat = Math.Sin(latRad);
 
-            double cosLat = Math.Cos(lat);
-            double sinLat = Math.Sin(lat);
-
-            double cosLong = Math.Cos(lon);
-            double sinLong = Math.Sin(lon);
+            double cosLong = Math.Cos(lonRad);
+            double sinLong = Math.Sin(lonRad);
 
             double c = 1 / Math.Sqrt(cosLat * cosLat + (1 - f) * (1 - f) * sinLat * sinLat);
             double s = (1 - f) * (1 - f) * c;
 
-            double x = (majorAxis * c + alt) * cosLat * cosLong;
-            double y = (majorAxis * c + alt) * cosLat * sinLong;
-            double z = (majorAxis * s + alt) * sinLat;
+            double x = (majorAxis * c + altMeters) * cosLat * cosLong;
+            double y = (majorAxis * c + altMeters) * cosLat * sinLong;
+            double z = (majorAxis * s + altMeters) * sinLat;
             return new EcefPosition(x, y, z);
         }
 
