@@ -4,11 +4,11 @@ namespace PvaConverters.Model.Scalars
 {
     public readonly struct Angle: IScalar
     {
-        public static readonly Angle Zero = new Angle(0.0);
-        public static readonly Angle Angle90 = new Angle(90.0);
-        public static readonly Angle Angle180 = new Angle(180.0);
-        public static readonly Angle Angle270 = new Angle(270.0);
-        public static readonly Angle Angle360 = new Angle(360.0);
+        public static readonly Angle Zero = Angle.FromDegrees(0.0);
+        public static readonly Angle Angle90 = Angle.FromDegrees(90.0);
+        public static readonly Angle Angle180 = Angle.FromDegrees(180.0);
+        public static readonly Angle Angle270 = Angle.FromDegrees(270.0);
+        public static readonly Angle Angle360 = Angle.FromDegrees(360.0);
         private readonly double m_degrees;
 
         private Angle(double degrees) => m_degrees = degrees;
@@ -38,8 +38,11 @@ namespace PvaConverters.Model.Scalars
 
         public double AsDouble()
         {
-            return Radians;
+            return Degrees;
         }
+
+        public static implicit operator double(Angle d) => d.Degrees;
+        public static explicit operator Angle(double b) => Angle.FromDegrees(b);
 
         public bool Equals(Angle other)
         {

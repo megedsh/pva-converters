@@ -145,7 +145,7 @@ namespace PvaConverters.Converters
                 getNotNaN(azimuthElevationRange.Range.Meters, 1),
                 out double x, out double y, out double z);
 
-            return ltpToGeo(new EnuPosition(x, y, z), origin);
+            return ltpToGeo(new NedPosition(x, y, -z), origin);
         }
 
         public NedPosition AerToNed(GeoPosition origin, AzimuthElevationRange azimuthElevationRange, Datum datum = null)

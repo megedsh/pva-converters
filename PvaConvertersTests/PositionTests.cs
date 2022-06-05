@@ -1,5 +1,6 @@
 using PvaConverters.Converters;
 using PvaConverters.Model;
+using PvaConverters.Model.AzimuthElevation;
 using PvaConverters.Model.Ecef;
 using PvaConverters.Model.LocalTangentPlane;
 using PvaConverters.Model.Scalars;
@@ -8,14 +9,14 @@ namespace PvaConvertersTests
 {
     public class PositionTests
     {
-        private PositionConverter subject = new PositionConverter();
+        private readonly PositionConverter subject = new PositionConverter();
 
-        private TestVector[] testVectors = new[]
+        private readonly TestVector[] testVectors =
         {
             new TestVector(0, 0, 0, Datum.WGS84.SemiMajorAxis, 0, 0),
-            new TestVector(0, 90, 0, 3.905482530786651E-10 , Datum.WGS84.SemiMajorAxis, 0),
-            new TestVector(0, -90, 0, 3.905482530786651E-10 , -Datum.WGS84.SemiMajorAxis, 0),
-            new TestVector(0, 180, 0, -Datum.WGS84.SemiMajorAxis , 7.810965061573302E-10, 0),
+            new TestVector(0, 90, 0, 3.905482530786651E-10, Datum.WGS84.SemiMajorAxis, 0),
+            new TestVector(0, -90, 0, 3.905482530786651E-10, -Datum.WGS84.SemiMajorAxis, 0),
+            new TestVector(0, 180, 0, -Datum.WGS84.SemiMajorAxis, 7.810965061573302E-10, 0),
             new TestVector(-43.907787, -70.013676, 1000, 1573391.6094067297, -4326070.505316898, -4401409.0969682215),
             new TestVector(35.203683802455934, -111.6660578308822, -100, -1926226.5550630623, -4848752.7459563175, 3656296.708297751),
             new TestVector(32.1882286, 34.8963593, 0, 4431451.158948314, 3091004.546873152, 3378114.0153715312),
@@ -32,21 +33,70 @@ namespace PvaConvertersTests
                 GeoPosition geo = new GeoPosition(lat, lon, Distance.FromMeters(testVector.Altitude));
 
                 EcefPosition ecef = subject.GeoToEcef(geo);
-                Assert.AreEqual(new EcefPosition(testVector.ExpectedX,testVector.ExpectedY,testVector.ExpectedZ), ecef);    
+
+                Assert.That(ecef, Is.EqualTo(new EcefPosition(testVector.ExpectedX, testVector.ExpectedY, testVector.ExpectedZ)));
             }
         }
-        [Test]
-        public void GeoToNed()
-        {
 
+        [Test]
+        public void GeoToNedAndEnu()
+        {
             GeoPosition contextGeoPosition = GeoPosition.FromDeg(-51.736538, -59.430458, 0);
             GeoPosition orgGeoPosition = GeoPosition.FromDeg(-51.687572, -60.158750, 3000);
-            
+
             NedPosition ned = subject.GeoToNed(orgGeoPosition, contextGeoPosition);
+            EnuPosition enu = subject.GeoToEnu(orgGeoPosition, contextGeoPosition);
+
+            NedPosition ned2 = enu.AsNed();
+
             assertNed(ned, 5199.1660, -50387.3839, -2799.35089);
+            assertNed(ned2, 5199.1660, -50387.3839, -2799.35089);
             GeoPosition geoPosition = subject.LtpToGeo(ned, contextGeoPosition);
             asserEquals(orgGeoPosition, geoPosition);
         }
+
+        [Test]
+        public void GeoToAer()
+        {
+            GeoPosition origin = GeoPosition.FromDeg(-51.687572, -60.158750, 3000);
+            AzimuthElevationRange[] testVector =
+            {
+                new AzimuthElevationRange(Angle.FromDegrees(10), Angle.FromDegrees(10), Distance.FromMeters(1000)),
+                new AzimuthElevationRange(Angle.FromDegrees(10), Angle.Zero, Distance.FromMeters(1000)),
+                new AzimuthElevationRange(Angle.FromDegrees(10), Angle.FromDegrees(10), Distance.FromMeters(1)),
+            };
+
+            foreach (AzimuthElevationRange aer in testVector)
+            {
+                GeoPosition geoPos = subject.AerToGeo(origin, aer);
+                var actual = subject.GeoToAer(origin, geoPos);
+
+
+                double delta = 1e-3;
+                Assert.AreEqual(aer.Azimuth, actual.Azimuth, delta);
+                Assert.AreEqual(aer.Elevation, actual.Elevation, delta);
+                Assert.AreEqual(aer.Range.Meters, actual.Range.Meters, delta);
+            }
+        }
+
+
+        [Test]
+        public void LtpToEcef()
+        {
+            GeoPosition origin = GeoPosition.FromDeg(-51.736538, -59.430458, 0);
+            GeoPosition orgGeoPosition = GeoPosition.FromDeg(-51.687572, -60.158750, 3000);
+
+            NedPosition ned = subject.GeoToNed(orgGeoPosition, origin);
+            EnuPosition enu = subject.GeoToEnu(orgGeoPosition, origin);
+
+            EcefPosition ecef1 = subject.LtpToEcef(ned, origin);
+            EcefPosition ecef2 = subject.LtpToEcef(enu, origin);
+            EcefPosition ecef3 = subject.GeoToEcef(orgGeoPosition);
+
+            asserEquals(ecef1, ecef2);
+            asserEquals(ecef2, ecef3);
+        }
+
 
         private void assertNed(NedPosition ned, double north, double east, double down)
         {
@@ -57,9 +107,16 @@ namespace PvaConvertersTests
 
         private void asserEquals(GeoPosition orgGeoPosition, GeoPosition geoPosition)
         {
-            Assert.IsTrue(Math.Abs(orgGeoPosition.Altitude.Meters - geoPosition.Altitude.Meters)<0.0001);
+            Assert.IsTrue(Math.Abs(orgGeoPosition.Altitude.Meters - geoPosition.Altitude.Meters) < 0.0001);
             Assert.IsTrue(Math.Abs(orgGeoPosition.Longitude.Degrees - geoPosition.Longitude.Degrees) < 0.00001);
             Assert.IsTrue(Math.Abs(orgGeoPosition.Latitude.Degrees - geoPosition.Latitude.Degrees) < 0.00001);
+        }
+
+        private void asserEquals(EcefPosition ecef1, EcefPosition ecef2)
+        {
+            Assert.IsTrue(Math.Abs(ecef1.X - ecef2.X) < 0.0001);
+            Assert.IsTrue(Math.Abs(ecef1.Y - ecef2.Y) < 0.00001);
+            Assert.IsTrue(Math.Abs(ecef1.Z - ecef2.Z) < 0.00001);
         }
     }
 
@@ -79,11 +136,10 @@ namespace PvaConvertersTests
         public double Longitude { get; set; }
         public double Altitude { get; set; }
 
-        public double ExpectedX{ get; set; }
+        public double ExpectedX { get; set; }
         public double ExpectedY { get; set; }
-        public double ExpectedZ{ get; set; }
+        public double ExpectedZ { get; set; }
     }
-
 }
 
 
@@ -124,7 +180,6 @@ namespace PvaConvertersTests
 
 //            Assert.IsTrue(geoPosition.Equals(orgGeoPosition));
 //        }
-
 
 
 //        [TestMethod]
@@ -277,46 +332,7 @@ namespace PvaConvertersTests
 //            }
 //        }
 
-//        [TestMethod]
-//        [TestCategory(TestCategories.CoordinatesConversion)]
-//        public void CoordinatesConversion_Geo_ToECEF_ToGeo()
-//        {
-//            double ACCURACY_XY = 0.0001;
-//            double ACCURACY_Z = 1.0;
-//            //-- use external conversion as a reference
-//            // https://www.oc.nps.edu/oc2902w/coord/llhxyz.htm?source=post_page---------------------------
-//            // this tool accuracy is 1 meter
-
-//            Tuple<GeoPosition, ECEFPosition>[] points =
-//            {
-//                new Tuple<GeoPosition, ECEFPosition>(GeoPosition.FromLatLonAndAltitude(-50, -55, 3000), new ECEFPosition(2357280, -3366545, -4865087)),
-//                new Tuple<GeoPosition, ECEFPosition>(GeoPosition.FromLatLonAndAltitude(-51, -58, 300),  new ECEFPosition(2131452, -3411036, -4933778)),
-//                new Tuple<GeoPosition, ECEFPosition>(GeoPosition.FromLatLonAndAltitude(32,  34,  0),    new ECEFPosition(4488458, 3027503,  3360431)),
-//                new Tuple<GeoPosition, ECEFPosition>(GeoPosition.FromLatLonAndAltitude(53,  2,   150),  new ECEFPosition(3844427, 134250,   5070663)),
-//                new Tuple<GeoPosition, ECEFPosition>(GeoPosition.FromLatLonAndAltitude(0,   0,   0),    new ECEFPosition(6378137, 0,        0))
-//            };
-//            using (new TestScope("Geo to ECEF"))
-//            {
-//                foreach (Tuple<GeoPosition, ECEFPosition> pointPos in points)
-//                {
-//                    ECEFPosition ecefPos = conversionContext.GetEcefPosition(pointPos.Item1);
-//                    Assert.AreEqual(pointPos.Item2.X, Math.Round(ecefPos.X), ACCURACY_XY, $"Wrong ecefPos.X \nActual:   {Math.Round(ecefPos.X)}\nExpected: {pointPos.Item2.X}");
-//                    Assert.AreEqual(pointPos.Item2.Y, Math.Round(ecefPos.Y), ACCURACY_XY, $"Wrong ecefPos.Y \nActual:   {Math.Round(ecefPos.Y)}\nExpected: {pointPos.Item2.Y}");
-//                    Assert.AreEqual(pointPos.Item2.Z, Math.Round(ecefPos.Z), ACCURACY_Z, $"Wrong ecefPos.Z \nActual:   {Math.Round(ecefPos.Z)}\nExpected: {pointPos.Item2.Z}");
-//                }
-//            }
-
-//            using (new TestScope("ECEF to Geo"))
-//            {
-//                foreach (Tuple<GeoPosition, ECEFPosition> pointPos in points)
-//                {
-//                    GeoPosition geo = conversionContext.GetGeoPosition(pointPos.Item2);
-//                    Assert.AreEqual(pointPos.Item1.Latitude.Degrees, geo.Latitude.Degrees, ACCURACY_XY, $"Wrong Latitude \nActual:   {geo.Latitude.Degrees}\nExpected: {pointPos.Item1.Latitude.Degrees}");
-//                    Assert.AreEqual(pointPos.Item1.Longitude.Degrees, geo.Longitude.Degrees, ACCURACY_XY, $"Wrong Longtitude \nActual:   {geo.Longitude.Degrees}\nExpected: {pointPos.Item1.Longitude.Degrees}");
-//                    Assert.AreEqual(pointPos.Item1.Altitude, geo.Altitude, ACCURACY_Z, $"Wrong Altitude \nActual:   {geo.Altitude}\nExpected: {pointPos.Item1.Altitude}");
-//                }
-//            }
-//        }
+//      
 
 //        private static double getNotNaN(double value) => double.IsNaN(value) ? 0 : value;
 //    }
