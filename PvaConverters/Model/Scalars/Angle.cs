@@ -40,5 +40,25 @@ namespace PvaConverters.Model.Scalars
         {
             return Radians;
         }
+
+        public bool Equals(Angle other)
+        {
+            return m_degrees.Equals(other.m_degrees);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Angle other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return m_degrees.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return $"{m_degrees}";
+        }
     }
 }

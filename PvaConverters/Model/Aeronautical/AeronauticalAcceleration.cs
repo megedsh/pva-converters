@@ -8,7 +8,7 @@ namespace PvaConverters.Model.Aeronautical
         {
         }
 
-        public Acceleration ClimbAcceleration => Vertic;
-        public Acceleration GroundAcceleration => Horiz;
+        public Acceleration ClimbAcceleration => Vertical;
+        public Acceleration GroundAcceleration => Horizontal;
     }
 }

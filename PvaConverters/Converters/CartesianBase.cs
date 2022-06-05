@@ -17,21 +17,12 @@ namespace PvaConverters.Converters
         where TAeronautical : AeronauticalVector<TScalar>
         where TAe : AzimuthElevationBase<TScalar>
     {
-        private readonly Func<Angle, Angle, double, TAe> m_polarFactory;
-        private readonly Func<double, double, double, TEcef> m_ecefFactory;
-        private readonly Func<double, double, double, TLtp> m_ltpFactory;
-        private readonly Func<double, TScalar> m_scalarFactory;
+        protected abstract  TAe createPolar(Angle azimuth, Angle elevation, double scalar);
+        protected abstract TEcef createEcef(double x, double y, double z);
+        protected abstract TLtp createNed(double north, double east, double down);
+        protected abstract TScalar createScalar(double scalar);
 
-        protected CartesianBase(Func<Angle, Angle, double, TAe> polarFactory,
-            Func<double, double, double, TEcef> ecefFactory,
-            Func<double, double, double, TLtp> ltpFactory,
-            Func<double, TScalar> scalarFactory)
-        {
-            m_polarFactory = polarFactory;
-            m_ecefFactory = ecefFactory;
-            m_ltpFactory = ltpFactory;
-            m_scalarFactory = scalarFactory;
-        }
+        
 
         #region Ltp
 
@@ -50,7 +41,7 @@ namespace PvaConverters.Converters
             Angle a = Angle.FromRadians(Math.Atan(multiply[2, 0] / raePosition.Range.Meters));
             Angle e = Angle.FromRadians(Math.Atan(multiply[1, 0] / raePosition.Range.Meters));
 
-            return m_polarFactory(a, e, scalar);
+            return createPolar(a, e, scalar);
         }
 
         public TEcef LtpToEcef(TLtp ltp, GeoPosition originGeoPosition) => LtpToEcef(ltp.North.AsDouble(), ltp.East.AsDouble(), ltp.Down.AsDouble(), originGeoPosition);
@@ -58,7 +49,7 @@ namespace PvaConverters.Converters
         public TEcef LtpToEcef(double north, double east, double down, GeoPosition originGeoPosition)
         {
             Vector3d ecef = CommonAlgo.TransformNedToEcef(north, east, down, originGeoPosition);
-            return m_ecefFactory(ecef.X, ecef.Y, ecef.Z);
+            return createEcef(ecef.X, ecef.Y, ecef.Z);
         }
 
         #endregion
@@ -74,7 +65,7 @@ namespace PvaConverters.Converters
         {
             Vector3d v = getNedVectorFromEcef(x, y, z, originGeoPosition);
 
-            return m_ltpFactory(v.X, v.Y, v.Z).AsNed();
+            return createNed(v.X, v.Y, v.Z).AsNed();
         }
 
 
@@ -86,7 +77,7 @@ namespace PvaConverters.Converters
         public TEnu EcefToEnu(double x, double y, double z, GeoPosition originGeoPosition)
         {
             Vector3d v = getNedVectorFromEcef(x, y, z, originGeoPosition);
-            return m_ltpFactory(v.X, v.Y, v.Z).AsEnu();
+            return createNed(v.X, v.Y, v.Z).AsEnu();
         }
 
         public void EcefToAeronautical(out Angle course,
@@ -102,7 +93,7 @@ namespace PvaConverters.Converters
 
         #region Aeronautical
 
-        public TEcef AeronauticalToEcef(TAeronautical an, GeoPosition originGeoPosition) => AeronauticalToEcef(an.Course.Radians, an.Vertic.AsDouble(), an.Horiz.AsDouble(), originGeoPosition);
+        public TEcef AeronauticalToEcef(TAeronautical an, GeoPosition originGeoPosition) => AeronauticalToEcef(an.Course.Radians, an.Vertical.AsDouble(), an.Horizontal.AsDouble(), originGeoPosition);
 
         public TEcef AeronauticalToEcef(double courseRad, double vertical,
             double horizontal, GeoPosition originGeoPosition)
@@ -114,14 +105,14 @@ namespace PvaConverters.Converters
 
         public TNed AeronauticalToNed(TAeronautical an)
         {
-            var nedVector = getNedVector(an.Course.Radians, an.Vertic.AsDouble(), an.Horiz.AsDouble());
-            return m_ltpFactory(nedVector.X, nedVector.Y, nedVector.Z).AsNed();
+            var nedVector = getNedVector(an.Course.Radians, an.Vertical.AsDouble(), an.Horizontal.AsDouble());
+            return createNed(nedVector.X, nedVector.Y, nedVector.Z).AsNed();
         }
 
         public TEnu AeronauticalToEnu(TAeronautical an)
         {
-            var nedVector = getNedVector(an.Course.Radians, an.Vertic.AsDouble(), an.Horiz.AsDouble());
-            return m_ltpFactory(nedVector.X, nedVector.Y, nedVector.Z).AsEnu();
+            var nedVector = getNedVector(an.Course.Radians, an.Vertical.AsDouble(), an.Horizontal.AsDouble());
+            return createNed(nedVector.X, nedVector.Y, nedVector.Z).AsEnu();
         }
 
         #endregion
@@ -131,19 +122,19 @@ namespace PvaConverters.Converters
         public TNed AevToNed(AzimuthElevationRange aer, TAe aev)
         {
             Vector3d nedVector = getNedVector(aer, aev);
-            return m_ltpFactory(nedVector.X, nedVector.Y, nedVector.Z).AsNed();
+            return createNed(nedVector.X, nedVector.Y, nedVector.Z).AsNed();
         }
 
         public TEnu AevToEnu(AzimuthElevationRange aer, TAe aev)
         {
             Vector3d nedVector = getNedVector(aer, aev);
-            return m_ltpFactory(nedVector.X, nedVector.Y, nedVector.Z).AsEnu();
+            return createNed(nedVector.X, nedVector.Y, nedVector.Z).AsEnu();
         }
 
         public TEcef AevToEcef(AzimuthElevationRange aer, TAe aev, GeoPosition origin)
         {
             Vector3d nedVector = getNedVector(aer, aev);
-            TLtp ltp = m_ltpFactory(nedVector.X, nedVector.Y, nedVector.Z);
+            TLtp ltp = createNed(nedVector.X, nedVector.Y, nedVector.Z);
             return LtpToEcef(ltp, origin);
         }
 
@@ -203,7 +194,7 @@ namespace PvaConverters.Converters
 
             course = Angle.FromRadians(azRad);
             rateOfClimb = ned.Up;
-            groundSpeed = m_scalarFactory(Math.Sqrt(ned.X * ned.X + ned.Y * ned.Y));
+            groundSpeed = createScalar(Math.Sqrt(ned.X * ned.X + ned.Y * ned.Y));
         }
 
         private static Vector3d getNedVector(double courseRad, double vertical,

@@ -46,6 +46,26 @@ namespace PvaConverters.Model.Scalars
         {
             return Meters;
         }
+
+        public bool Equals(Distance other)
+        {
+            return Meters.Equals(other.Meters);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Distance other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return Meters.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return $"{Meters}";
+        }
     }
 }
 

@@ -19,7 +19,7 @@ namespace PvaConverters.Model.LocalTangentPlane
 
         public override string ToString()
         {
-            return $"{base.ToString()}, {nameof(North)}: {North}, {nameof(East)}: {East}, {nameof(Down)}: {Down}";
+            return $"{nameof(North)}: {North}, {nameof(East)}: {East}, {nameof(Down)}: {Down}";
         }
         
     }

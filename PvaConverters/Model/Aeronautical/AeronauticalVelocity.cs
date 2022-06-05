@@ -8,7 +8,7 @@ namespace PvaConverters.Model.Aeronautical
         {
         }
 
-        public Velocity RateOfClimb => Vertic;
-        public Velocity GroundSpeed => Horiz;
+        public Velocity RateOfClimb => Vertical;
+        public Velocity GroundSpeed => Horizontal;
     }
 }
