@@ -6,6 +6,7 @@ using PvaConverters.Model.Scalars;
 namespace PvaConverters.Model.AzimuthElevation
 {
     public abstract class AzimuthElevationBase<T> 
+    where T : IScalar
     {
         protected AzimuthElevationBase(Angle azimuth, Angle elevation, T scalar)
         {
@@ -17,5 +18,10 @@ namespace PvaConverters.Model.AzimuthElevation
         public Angle Azimuth { get; }
         public Angle Elevation { get; }
         public T Scalar { get; }
+
+        public override string ToString()
+        {
+            return $"{nameof(Azimuth)}:{Azimuth}, {nameof(Elevation)}:{Elevation},{typeof(T).Name}:{Scalar} ";
+        }
     }
 }

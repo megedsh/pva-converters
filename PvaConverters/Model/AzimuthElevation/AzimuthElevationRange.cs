@@ -14,5 +14,15 @@ namespace PvaConverters.Model.AzimuthElevation
         {
             
         }
+
+        public override string ToString()
+        {
+            return $"{base.ToString()}";
+        }
+
+        //public override string ToString()
+        //{
+        //    return $"{nameof(Azimuth)}:{Azimuth}, {nameof(Elevation)}:{Elevation},{nameof(Range)}:{Range} ";
+        //}
     }
 }

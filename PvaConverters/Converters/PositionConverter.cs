@@ -117,7 +117,7 @@ namespace PvaConverters.Converters
             return new GeoPosition(Angle.FromRadians(lat), Angle.FromRadians(lon), Distance.FromMeters(alt));
         }
 
-        public AzimuthElevationRange EcefToAer(GeoPosition origin, EcefPosition target, Datum datum = null)
+        public AzimuthElevationRange EcefToAer(EcefPosition target, GeoPosition origin, Datum datum = null)
         {
             LtpPosition ltp = EcefToNed(target, origin, datum);
 
