@@ -10,17 +10,18 @@ namespace PvaConverters.Model.Scalars
         public static readonly Angle Angle270 = Angle.FromDegrees(270.0);
         public static readonly Angle Angle360 = Angle.FromDegrees(360.0);
         private readonly double m_degrees;
+        private static readonly  double s_piTo180 = (Math.PI / 180.0);
 
         private Angle(double degrees) => m_degrees = degrees;
 
         public static Angle FromDegrees(double degrees) => new Angle(degrees);
 
-        public static Angle FromRadians(double radians) => new Angle(radians / (Math.PI / 180.0));
+        public static Angle FromRadians(double radians) => new Angle(radians / s_piTo180);
 
 
         public double Degrees => m_degrees;
 
-        public double Radians => m_degrees * (Math.PI / 180.0);
+        public double Radians => m_degrees * s_piTo180;
 
 
         public Angle Normalized()

@@ -2,38 +2,31 @@
 
 namespace PvaConverters.Model.LocalTangentPlane
 {
-    public abstract class LtpAcceleration : Vector3d, ILocalTangentPlane<Acceleration,NedAcceleration,EnuAcceleration>
+    public class LtpAcceleration : ILocalTangentPlane<Acceleration>
     {
-        protected LtpAcceleration(double xMetersPerSqrSec, double yMetersPerSqrSec, double zMetersPerSqrSec) : base(xMetersPerSqrSec, yMetersPerSqrSec, zMetersPerSqrSec)
+
+        public LtpAcceleration(double northMetersPerSec, double eastMetersPerSec, double downMetersPerSec):this(Acceleration.FromMetersPerSquareSecond(northMetersPerSec),
+            Acceleration.FromMetersPerSquareSecond(eastMetersPerSec),
+            Acceleration.FromMetersPerSquareSecond(downMetersPerSec)
+            )
         {
         }
-
-        public  Acceleration East { get; protected set; }
-        public  Acceleration West { get; protected set; }
-        public  Acceleration North { get; protected set; }
-        public  Acceleration South { get; protected set; }
-        public  Acceleration Up { get; protected set; }
-        public  Acceleration Down { get; protected set; }
-
-        public NedAcceleration AsNed()
+        public LtpAcceleration(Acceleration north, Acceleration east, Acceleration down)
         {
-            if (this is NedAcceleration ned)
-            {
-                return ned;
-            }
-
-            return new NedAcceleration(North, East, Down);
+            North = north;
+            East = east;
+            West = -east;
+            South = -north;
+            Up = -down;
+            Down = down;
         }
 
 
-        public EnuAcceleration AsEnu()
-        {
-            if (this is EnuAcceleration enu)
-            {
-                return enu;
-            }
-
-            return new EnuAcceleration(East, North, Up);
-        }
+        public Acceleration East { get; protected set; }
+        public Acceleration West { get; protected set; }
+        public Acceleration North { get; protected set; }
+        public Acceleration South { get; protected set; }
+        public Acceleration Up { get; protected set; }
+        public Acceleration Down { get; protected set; }
     }
 }

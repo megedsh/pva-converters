@@ -9,9 +9,9 @@ namespace PvaConvertersTests
 {
     public class PositionTests
     {
-        private readonly PositionConverter subject = new PositionConverter();
+        private readonly PositionConverter m_subject = new PositionConverter();
 
-        private readonly TestVector[] testVectors =
+        private readonly TestVector[] m_testVectors =
         {
             new TestVector(0, 0, 0, Datum.WGS84.SemiMajorAxis, 0, 0),
             new TestVector(0, 90, 0, 3.905482530786651E-10, Datum.WGS84.SemiMajorAxis, 0),
@@ -26,34 +26,31 @@ namespace PvaConvertersTests
         [Test]
         public void GeoToEcef()
         {
-            foreach (var testVector in testVectors)
+            foreach (var testVector in m_testVectors)
             {
                 var lat = Angle.FromDegrees(testVector.Latitude);
                 var lon = Angle.FromDegrees(testVector.Longitude);
                 GeoPosition geo = new GeoPosition(lat, lon, Distance.FromMeters(testVector.Altitude));
 
-                EcefPosition ecef = subject.GeoToEcef(geo);
+                EcefPosition ecef = m_subject.GeoToEcef(geo);
                 Assert.That(ecef, Is.EqualTo(new EcefPosition(testVector.ExpectedX, testVector.ExpectedY, testVector.ExpectedZ)));
 
-                var geo2 = subject.EcefToGeo(ecef);
+                var geo2 = m_subject.EcefToGeo(ecef);
                 assertEquals(geo, geo2);
             }
         }
 
         [Test]
-        public void GeoToNedAndEnu()
+        public void GeoToLtp()
         {
             GeoPosition contextGeoPosition = GeoPosition.FromDeg(-51.736538, -59.430458, 0);
             GeoPosition orgGeoPosition = GeoPosition.FromDeg(-51.687572, -60.158750, 3000);
 
-            NedPosition ned = subject.GeoToNed(orgGeoPosition, contextGeoPosition);
-            EnuPosition enu = subject.GeoToEnu(orgGeoPosition, contextGeoPosition);
+            LtpPosition ltp = m_subject.GeoToLtp(orgGeoPosition, contextGeoPosition);
 
-            NedPosition ned2 = enu.AsNed();
-
-            assertNed(ned, 5199.1660, -50387.3839, -2799.35089);
-            assertNed(ned2, 5199.1660, -50387.3839, -2799.35089);
-            GeoPosition geoPosition = subject.LtpToGeo(ned, contextGeoPosition);
+            assertLtp(ltp, 5199.1660, -50387.3839, -2799.35089);
+            
+            GeoPosition geoPosition = m_subject.LtpToGeo(ltp, contextGeoPosition);
             assertEquals(orgGeoPosition, geoPosition);
         }
 
@@ -70,8 +67,8 @@ namespace PvaConvertersTests
 
             foreach (AzimuthElevationRange aer in testVector)
             {
-                GeoPosition geoPos = subject.AerToGeo(origin, aer);
-                var actual = subject.GeoToAer(origin, geoPos);
+                GeoPosition geoPos = m_subject.AerToGeo(origin, aer);
+                var actual = m_subject.GeoToAer(origin, geoPos);
 
 
                 double delta = 1e-3;
@@ -88,15 +85,12 @@ namespace PvaConvertersTests
             GeoPosition origin = GeoPosition.FromDeg(-51.736538, -59.430458, 0);
             GeoPosition target = GeoPosition.FromDeg(-51.687572, -60.158750, 3000);
 
-            NedPosition ned = subject.GeoToNed(target, origin);
-            EnuPosition enu = subject.GeoToEnu(target, origin);
+            LtpPosition ned = m_subject.GeoToLtp(target, origin);
 
-            EcefPosition ecef1 = subject.LtpToEcef(ned, origin);
-            EcefPosition ecef2 = subject.LtpToEcef(enu, origin);
-            EcefPosition ecef3 = subject.GeoToEcef(target);
+            EcefPosition ecef1 = m_subject.LtpToEcef(ned, origin);
+            EcefPosition ecef2 = m_subject.GeoToEcef(target);
 
             assertEquals(ecef1, ecef2);
-            assertEquals(ecef2, ecef3);
         }
 
 
@@ -105,17 +99,13 @@ namespace PvaConvertersTests
         {
             GeoPosition origin = GeoPosition.FromDeg(-51.736538, -59.430458, 0);
             GeoPosition target = GeoPosition.FromDeg(-51.687572, -60.158750, 3000);
-            
-            NedPosition ned = subject.GeoToNed(target, origin);
-            EnuPosition enu = subject.GeoToEnu(target, origin);
 
-            AzimuthElevationRange aer1 = subject.LtpToAer(ned);
-            AzimuthElevationRange aer2 = subject.LtpToAer(enu);
-            EcefPosition ecef = subject.LtpToEcef(enu, origin);
-            AzimuthElevationRange aer3= subject.EcefToAer(ecef, origin);
+            LtpPosition ned = m_subject.GeoToLtp(target, origin);
 
+            AzimuthElevationRange aer1 = m_subject.LtpToAer(ned);
+            EcefPosition ecef = m_subject.LtpToEcef(ned, origin);
+            AzimuthElevationRange aer2 = m_subject.EcefToAer(ecef, origin);
             assertEquals(aer1, aer2);
-            assertEquals(aer2, aer3);
         }
 
         [Test]
@@ -124,17 +114,17 @@ namespace PvaConvertersTests
             GeoPosition origin = GeoPosition.FromDeg(-51.736538, -59.430458, 0);
             GeoPosition target = GeoPosition.FromDeg(-51.687572, -60.158750, 3000);
 
+            var targetEcef = m_subject.GeoToEcef(target);
 
-            var targetEcef = subject.GeoToEcef(target);
+            var ltp1 = m_subject.EcefToLtp(targetEcef, origin);
+            var ltp2 = m_subject.GeoToLtp(target, origin);
 
-            var ned = subject.EcefToNed(targetEcef,origin);
-            var enu = subject.EcefToEnu(targetEcef, origin);
-            
-            assertEquals(enu, ned);
+
+            assertEquals(ltp1, ltp2);
         }
 
 
-        private void assertNed(NedPosition ned, double north, double east, double down)
+        private void assertLtp(ILocalTangentPlane<Distance> ned, double north, double east, double down)
         {
             Assert.That(ned.North.Meters, Is.EqualTo(north).Within(0.0001));
             Assert.That(ned.East.Meters, Is.EqualTo(east).Within(0.0001));
@@ -156,11 +146,11 @@ namespace PvaConvertersTests
         }
 
         private void assertEquals<T>(AzimuthElevationBase<T> aer1, AzimuthElevationBase<T> aer2)
-        where T : IScalar
+            where T : IScalar
         {
-            Assert.IsTrue(Math.Abs(aer1.Azimuth - aer1.Azimuth) < 0.0001);
-            Assert.IsTrue(Math.Abs(aer1.Elevation - aer1.Elevation) < 0.00001);
-            Assert.IsTrue(Math.Abs(aer1.Scalar.AsDouble() - aer1.Scalar.AsDouble()) < 0.00001);
+            Assert.IsTrue(Math.Abs(aer1.Azimuth - aer2.Azimuth) < 0.0001);
+            Assert.IsTrue(Math.Abs(aer1.Elevation - aer2.Elevation) < 0.00001);
+            Assert.IsTrue(Math.Abs(aer1.Scalar.AsDouble() - aer2.Scalar.AsDouble()) < 0.00001);
         }
 
         private void assertEquals<T>(ILocalTangentPlane<T> ltp1, ILocalTangentPlane<T> ltp2)
@@ -230,7 +220,7 @@ namespace PvaConvertersTests
 
 //            GeoPosition contextGeoPosition = GeoPosition.FromLatLonAndAltitude(-51.736538, -59.430458, 0);
 
-//            BATPosition batPosition = s_positionConverter.GeoToNed(orgGeoPosition, contextGeoPosition);
+//            BATPosition batPosition = s_positionConverter.GeoToLtp(orgGeoPosition, contextGeoPosition);
 //            GeoPosition geoPosition = s_positionConverter.NedToGeo(batPosition, contextGeoPosition);
 
 //            Assert.IsTrue(geoPosition.Equals(orgGeoPosition));
@@ -378,7 +368,7 @@ namespace PvaConvertersTests
 //                double newCourse = Math.Abs(course.Degrees) < delta ? 0 : course.Degrees < 0 ? 360 + course.Degrees : course.Degrees;
 //                Assert.AreEqual(getNotNaN(pointData.Item1.Course.Degrees), newCourse, delta, "Wrong course");
 //                Assert.AreEqual(getNotNaN(pointData.Item1.RateOfClimb.MetersPerSecond), rateOfClimb.MetersPerSecond, delta, "Wrong RateOfClimb");
-//                Assert.AreEqual(getNotNaN(pointData.Item1.GroundSpeed.MetersPerSecond), groundSpeed.MetersPerSecond, delta, "Wrong GroundSpeed");
+//                Assert.AreEqual(getNotNaN(pointData.Item1.GroundVelocity.MetersPerSecond), groundSpeed.MetersPerSecond, delta, "Wrong GroundVelocity");
 
 //                ECEFVelocity newECEF = s_velocityConverter.AeronauticalToEcefVelocity(course, rateOfClimb, groundSpeed, origin);
 //                Assert.AreEqual(getNotNaN(pointData.Item3.X.MetersPerSecond), newECEF.X.MetersPerSecond, delta, "Wrong X");

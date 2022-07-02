@@ -8,41 +8,19 @@ using PvaConverters.Model.Scalars;
 using PvaConverters.Mtrx;
 
 namespace PvaConverters.Converters
-{ 
-    public abstract class CartesianBase<TLtp, TAe, TEcef, TScalar, TEnu, TNed, TAeronautical>
+{
+    public abstract class CartesianBase<TLtp, TEcef, TScalar, TAeronautical>
         where TScalar : IScalar
-        where TLtp : ILocalTangentPlane<TScalar, TNed, TEnu>
-        where TNed : ILocalTangentPlane<TScalar, TNed, TEnu>
+        where TLtp : ILocalTangentPlane<TScalar>
         where TEcef : EcefBase<TScalar>
         where TAeronautical : AeronauticalVector<TScalar>
-        where TAe : AzimuthElevationBase<TScalar>
     {
-        protected abstract  TAe createPolar(Angle azimuth, Angle elevation, double scalar);
         protected abstract TEcef createEcef(double x, double y, double z);
-        protected abstract TLtp createNed(double north, double east, double down);
+        protected abstract TLtp createLtp(double north, double east, double down);
         protected abstract TScalar createScalar(double scalar);
 
-        
 
         #region Ltp
-
-        public TAe LtpToAev(TLtp ltp, AzimuthElevationRange raePosition)
-        {
-            Matrix r1 = calcRzC(raePosition);
-            Matrix r2 = calcRyB(raePosition);
-            Matrix r3 = calcRxA();
-
-            Matrix rotationMatrix = calcRotationMatrix(r1, r2, r3);
-            Matrix matrix4D = ltpToMatrix4D(ltp, 1);
-
-            Matrix multiply = MatrixAlgo.Multiply(rotationMatrix, matrix4D);
-
-            double scalar = multiply[0, 0];
-            Angle a = Angle.FromRadians(Math.Atan(multiply[2, 0] / raePosition.Range.Meters));
-            Angle e = Angle.FromRadians(Math.Atan(multiply[1, 0] / raePosition.Range.Meters));
-
-            return createPolar(a, e, scalar);
-        }
 
         public TEcef LtpToEcef(TLtp ltp, GeoPosition originGeoPosition) => LtpToEcef(ltp.North.AsDouble(), ltp.East.AsDouble(), ltp.Down.AsDouble(), originGeoPosition);
 
@@ -56,37 +34,25 @@ namespace PvaConverters.Converters
 
         #region Ecef
 
-        public TNed EcefToNed(TEcef ecef, GeoPosition originGeoPosition)
+        public TLtp EcefToLtp(TEcef ecef, GeoPosition originGeoPosition)
         {
-            return EcefToNed(ecef.X, ecef.Y, ecef.Z, originGeoPosition);
+            return EcefToLtp(ecef.X, ecef.Y, ecef.Z, originGeoPosition);
         }
 
-        public TNed EcefToNed(double x, double y, double z, GeoPosition originGeoPosition)
+        public TLtp EcefToLtp(double x, double y, double z, GeoPosition originGeoPosition)
         {
             Vector3d v = getNedVectorFromEcef(x, y, z, originGeoPosition);
 
-            return createNed(v.X, v.Y, v.Z).AsNed();
-        }
-
-
-        public TEnu EcefToEnu(TEcef ecef, GeoPosition originGeoPosition)
-        {
-            return EcefToEnu(ecef.X, ecef.Y, ecef.Z, originGeoPosition);
-        }
-
-        public TEnu EcefToEnu(double x, double y, double z, GeoPosition originGeoPosition)
-        {
-            Vector3d v = getNedVectorFromEcef(x, y, z, originGeoPosition);
-            return createNed(v.X, v.Y, v.Z).AsEnu();
+            return createLtp(v.X, v.Y, v.Z);
         }
 
         public void EcefToAeronautical(out Angle course,
-            out TScalar rateOfClimb,
-            out TScalar groundSpeed,
+            out TScalar vertical,
+            out TScalar horiz,
             TEcef ecef, GeoPosition originGeoPosition)
         {
-            TNed ned = EcefToNed(ecef.X, ecef.Y, ecef.Z, originGeoPosition);
-            nedToAeronautical(out course, out rateOfClimb, out groundSpeed, ned);
+            var ned = EcefToLtp(ecef.X, ecef.Y, ecef.Z, originGeoPosition);
+            nedToAeronautical(out course, out vertical, out horiz, ned);
         }
 
         #endregion
@@ -103,73 +69,21 @@ namespace PvaConverters.Converters
             return LtpToEcef(nedVector.X, nedVector.Y, nedVector.Z, originGeoPosition);
         }
 
-        public TNed AeronauticalToNed(TAeronautical an)
+        public TLtp AeronauticalToLtp(TAeronautical an)
         {
             var nedVector = getNedVector(an.Course.Radians, an.Vertical.AsDouble(), an.Horizontal.AsDouble());
-            return createNed(nedVector.X, nedVector.Y, nedVector.Z).AsNed();
-        }
-
-        public TEnu AeronauticalToEnu(TAeronautical an)
-        {
-            var nedVector = getNedVector(an.Course.Radians, an.Vertical.AsDouble(), an.Horizontal.AsDouble());
-            return createNed(nedVector.X, nedVector.Y, nedVector.Z).AsEnu();
-        }
-
-        #endregion
-
-        #region AzimuthElevation
-
-        public TNed AevToNed(AzimuthElevationRange aer, TAe aev)
-        {
-            Vector3d nedVector = getNedVector(aer, aev);
-            return createNed(nedVector.X, nedVector.Y, nedVector.Z).AsNed();
-        }
-
-        public TEnu AevToEnu(AzimuthElevationRange aer, TAe aev)
-        {
-            Vector3d nedVector = getNedVector(aer, aev);
-            return createNed(nedVector.X, nedVector.Y, nedVector.Z).AsEnu();
-        }
-
-        public TEcef AevToEcef(AzimuthElevationRange aer, TAe aev, GeoPosition origin)
-        {
-            Vector3d nedVector = getNedVector(aer, aev);
-            TLtp ltp = createNed(nedVector.X, nedVector.Y, nedVector.Z);
-            return LtpToEcef(ltp, origin);
+            return createLtp(nedVector.X, nedVector.Y, nedVector.Z);
         }
 
         #endregion
 
         #region private
 
-        private static Vector3d getNedVector(AzimuthElevationRange aer, TAe aev)
-        {
-            Matrix r1 = calcRzC(aer);
-            Matrix r2 = calcRyB(aer);
-            Matrix r3 = calcRxA();
-
-            Matrix rotationMatrix = calcRotationMatrix(r1, r2, r3).Transpose();
-
-            Matrix raeMatrix = new Matrix(new[,]
-            {
-                { aev.Scalar.AsDouble() },
-                { aer.Range.Meters * Math.Tan(aev.Elevation.Radians) },
-                { aer.Range.Meters * Math.Tan(aev.Azimuth.Radians) },
-                { 1.0 }
-            });
-
-            Matrix multiply = MatrixAlgo.Multiply(rotationMatrix, raeMatrix);
-
-            return new Vector3d(multiply[0, 0],
-                multiply[1, 0],
-                multiply[2, 0]);
-        }
-
         private static Vector3d getNedVectorFromEcef(double x,
             double y,
             double z, GeoPosition originGeoPosition)
         {
-            Matrix m = CommonAlgo.LllnToEcefMatrix(originGeoPosition);
+            Matrix m = CommonAlgo.GeoPositionToEcefMatrix(originGeoPosition);
             Matrix T = m.Transpose();
 
             double ex = T[0, 0] * x + T[0, 1] * y + T[0, 2] * z;
@@ -179,22 +93,26 @@ namespace PvaConverters.Converters
             return new Vector3d(ex, ey, ez);
         }
 
-        private void nedToAeronautical(out Angle course, out TScalar rateOfClimb, out TScalar groundSpeed, TNed ned)
+        private void nedToAeronautical(out Angle course, out TScalar vertical, out TScalar horiz, ILocalTangentPlane<TScalar> ned)
         {
             double azRad = 0;
-            double magnitude = Math.Sqrt(ned.X * ned.X + ned.Y * ned.Y + ned.Z * ned.Z);
+            double x = ned.North.AsDouble();
+            double y = ned.East.AsDouble();
+            double z = ned.Down.AsDouble();
+
+            double magnitude = Math.Sqrt(x * x + y * y + z * z);
 
             if (magnitude > 0.0)
             {
-                double normX = ned.X / magnitude;
-                double normY = ned.Y / magnitude;
-                int num = Math.Abs(ned.X) >= 1E-10 ? 0 : Math.Abs(ned.Y) < 1E-10 ? 1 : 0;
+                double normX = x / magnitude;
+                double normY = y / magnitude;
+                int num = Math.Abs(x) >= 1E-10 ? 0 : Math.Abs(y) < 1E-10 ? 1 : 0;
                 azRad = num == 0 ? Math.Atan2(normY, normX) : 0.0;
             }
 
             course = Angle.FromRadians(azRad);
-            rateOfClimb = ned.Up;
-            groundSpeed = createScalar(Math.Sqrt(ned.X * ned.X + ned.Y * ned.Y));
+            vertical = ned.Up;
+            horiz = createScalar(Math.Sqrt(x * x + y * y));
         }
 
         private static Vector3d getNedVector(double courseRad, double vertical,

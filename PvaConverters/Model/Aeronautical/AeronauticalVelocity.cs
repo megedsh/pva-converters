@@ -4,11 +4,11 @@ namespace PvaConverters.Model.Aeronautical
 {
     public class AeronauticalVelocity : AeronauticalVector<Velocity>
     {
-        public AeronauticalVelocity(Angle course, Velocity rateOfClimb, Velocity groundSpeed) : base(course, rateOfClimb, groundSpeed)
+        public AeronauticalVelocity(Angle course, Velocity vertical, Velocity horizontal) : base(course, vertical, horizontal)
         {
         }
 
         public Velocity RateOfClimb => Vertical;
-        public Velocity GroundSpeed => Horizontal;
+        public Velocity GroundVelocity => Horizontal;
     }
 }

@@ -2,10 +2,19 @@
 
 namespace PvaConverters.Model.LocalTangentPlane
 {
-    public abstract class LtpVelocity : Vector3d, ILocalTangentPlane<Velocity, NedVelocity, EnuVelocity>
+    public class LtpVelocity : ILocalTangentPlane<Velocity>
     {
-        protected LtpVelocity(double xMetersPerSec, double yMetersPerSec, double zMetersPerSec) : base(xMetersPerSec, yMetersPerSec, zMetersPerSec)
+        public LtpVelocity(Velocity north, Velocity east, Velocity down) : this(north.MetersPerSecond, east.MetersPerSecond, down.MetersPerSecond)
         {
+        }
+        public LtpVelocity(double northMetersPerSec, double eastMetersPerSec, double downMetersPerSec) 
+        {
+            North = Velocity.FromMetersPerSecond(northMetersPerSec);
+            East = Velocity.FromMetersPerSecond(eastMetersPerSec);
+            West = Velocity.FromMetersPerSecond(-eastMetersPerSec);
+            South = Velocity.FromMetersPerSecond(-northMetersPerSec);
+            Up = Velocity.FromMetersPerSecond(-downMetersPerSec);
+            Down = Velocity.FromMetersPerSecond(downMetersPerSec);
         }
 
         public Velocity East { get; protected set; }
@@ -14,26 +23,5 @@ namespace PvaConverters.Model.LocalTangentPlane
         public Velocity South { get; protected set; }
         public Velocity Up { get; protected set; }
         public Velocity Down { get; protected set; }
-
-        public NedVelocity AsNed()
-        {
-            if (this is NedVelocity ned)
-            {
-                return ned;
-            }
-
-            return new NedVelocity(North, East, Down);
-        }
-
-
-        public EnuVelocity AsEnu()
-        {
-            if (this is EnuVelocity enu)
-            {
-                return enu;
-            }
-
-            return new EnuVelocity(East, North, Up);
-        }
     }
 }

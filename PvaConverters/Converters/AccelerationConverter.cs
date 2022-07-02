@@ -6,7 +6,7 @@ using PvaConverters.Model.Scalars;
 
 namespace PvaConverters.Converters
 {
-    public class AccelerationConverter : CartesianBase<LtpAcceleration, AzimuthElevationAcceleration, EcefAcceleration, Acceleration, EnuAcceleration, NedAcceleration, AeronauticalAcceleration>
+    public class AccelerationConverter : CartesianBase<LtpAcceleration,  EcefAcceleration, Acceleration,   AeronauticalAcceleration>
     {
         
         protected override Acceleration createScalar(double arg)
@@ -14,9 +14,9 @@ namespace PvaConverters.Converters
             return Acceleration.FromMetersPerSquareSecond(arg);
         }
 
-        protected override LtpAcceleration createNed(double x, double y, double z)
+        protected override LtpAcceleration createLtp(double north, double east, double down)
         {
-            return new NedAcceleration(x, y, z);
+            return new LtpAcceleration(north, east, down);
         }
 
         protected override EcefAcceleration createEcef(double x, double y, double z)
@@ -24,10 +24,5 @@ namespace PvaConverters.Converters
             return new EcefAcceleration(x, y, z);
         }
 
-
-        protected override AzimuthElevationAcceleration createPolar(Angle az, Angle el, double sc)
-        {
-            return new AzimuthElevationAcceleration(az, el, Acceleration.FromMetersPerSquareSecond(sc));
-        }
     }
 }

@@ -2,9 +2,18 @@
 
 namespace PvaConverters.Model.LocalTangentPlane
 {
-    public abstract class LtpPosition : Vector3d, ILocalTangentPlane<Distance, NedPosition, EnuPosition>
+    public class LtpPosition :  ILocalTangentPlane<Distance>
     {
-        protected LtpPosition(double xMeters, double yMeters, double zMeters) : base(xMeters, yMeters, zMeters)
+        public LtpPosition(Distance north, Distance east, Distance down)
+        {
+            North = north;
+            East = east;
+            West = -east;
+            South = -north;
+            Up = -down;
+            Down = down;
+        }
+        public LtpPosition(double northMeters, double eastMeters, double downMeters):this(Distance.FromMeters(northMeters), Distance.FromMeters(eastMeters), Distance.FromMeters(downMeters))
         {
         }
 
@@ -14,27 +23,6 @@ namespace PvaConverters.Model.LocalTangentPlane
         public Distance South { get; protected set; }
         public Distance Up { get; protected set; }
         public Distance Down { get; protected set; }
-
-        public NedPosition AsNed()
-        {
-            if (this is NedPosition ned)
-            {
-                return ned;
-            }
-
-            return new NedPosition(North, East, Down);
-        }
-
-
-        public EnuPosition AsEnu()
-        {
-            if (this is EnuPosition enu)
-            {
-                return enu;
-            }
-
-            return new EnuPosition(East, North, Up);
-        }
 
         public override string ToString()
         {

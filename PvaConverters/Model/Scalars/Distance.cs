@@ -66,6 +66,10 @@ namespace PvaConverters.Model.Scalars
         {
             return $"{Meters}";
         }
+
+        public static Distance operator -(Distance f, Distance s) => Distance.FromMeters(f.Meters - s.Meters);
+        public static implicit operator Distance(double meters) => new Distance(meters);
+        public static implicit operator double(Distance distance) => distance.Meters;
     }
 }
 

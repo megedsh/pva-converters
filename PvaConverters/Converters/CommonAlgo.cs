@@ -12,7 +12,7 @@ namespace PvaConverters.Converters
             double y = east;
             double z = down;
 
-            Matrix T = LllnToEcefMatrix(origin);
+            Matrix T = GeoPositionToEcefMatrix(origin);
 
             double ex = T[0, 0] * x + T[0, 1] * y + T[0, 2] * z;
             double ey = T[1, 0] * x + T[1, 1] * y + T[1, 2] * z;
@@ -20,7 +20,7 @@ namespace PvaConverters.Converters
             return new Vector3d(ex, ey, ez);
         }
 
-        public static Matrix LllnToEcefMatrix(GeoPosition origin)
+        public static Matrix GeoPositionToEcefMatrix(GeoPosition origin)
         {
             double[,] matrix = new double[3, 3];
 

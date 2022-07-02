@@ -12,12 +12,4 @@ namespace PvaConverters.Model.LocalTangentPlane
         T Up { get; }
         T Down { get; }
     }
-
-
-    public interface ILocalTangentPlane<T,NedT,EnuT>: ILocalTangentPlane<T>, IVector3d
-    where T: IScalar
-    {
-        NedT AsNed();
-        EnuT AsEnu();
-    }
 }

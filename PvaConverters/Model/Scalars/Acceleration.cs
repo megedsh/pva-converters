@@ -50,5 +50,9 @@ namespace PvaConverters.Model.Scalars
         {
             return MetersPerSquareSecond;
         }
+
+        public static Acceleration operator -(Acceleration f, Acceleration s) => FromMetersPerSquareSecond(f.MetersPerSquareSecond - s.MetersPerSquareSecond);
+        public static implicit operator Acceleration(double mpss) => new Acceleration(mpss);
+        public static implicit operator double(Acceleration distance) => distance.MetersPerSquareSecond;
     }
 }
