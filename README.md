@@ -10,9 +10,10 @@ Convert between 4 types of geographical coordinates systems.
 
 ![This is an image](https://ww2.mathworks.cn/help/map/ecef_system.png)
 
-3. **Geographic coordinate system** (latitude, longitude, altitude)  https://en.wikipedia.org/wiki/Geographic_coordinate_system
+3. **Geographic Coordinate System** (latitude, longitude, altitude)  https://en.wikipedia.org/wiki/Geographic_coordinate_system
 
 ![This is an image](http://jhnet.co.uk/articles/os_coord/lat_lon.png)
 
-4. **Horizontal Position (Azimuth, Elevation, Range or Distance)**
+4. **Local Horizontal Coordinates** (also known as polar position, or Azimuth, Elevation, Range) 
+5. 
 
