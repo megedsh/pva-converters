@@ -37,7 +37,7 @@ Console.WriteLine(ecef);
 // X: 4431798.222675216, Y: 3091246.629098461, Z: 3378380.366578883
 ```
 
-**Convert Geo-Position to Local tangent plane**
+**Convert two geo-position points to Local tangent plane**
 
 ```
 var pc = new PositionConverter();
@@ -52,6 +52,29 @@ Console.WriteLine(geoToLtp.ToStringEnu());
 // East: -50387.38398064566, North: 5199.166000297293, Up: 2799.350897683762
 ```
 
+**Convert two geo-position points to Azimuth elevation range**
+```
+var pc = new PositionConverter();
+GeoPosition origin = GeoPosition.FromDeg(4.682880, -7.965253, 0);
+GeoPosition target = GeoPosition.FromDeg(4.782880, -7.985253, 3000);
+var azimuthElevationRange = pc.GeoToAer(origin,target );
+Console.WriteLine(azimuthElevationRange);
+
+// Prints
+// Azimuth:348.6549994285944, Elevation:14.840890085414388,Distance:11673.341221811483 
+```
+
+**Convert local tangent plane to ECEF**
+```
+var pv = new PositionConverter();
+GeoPosition origin = GeoPosition.FromDeg(4.682880, -7.965253, 0);
+LtpPosition ltpPosition = new LtpPosition(100.0, 200.0, 300.0);
+EcefPosition ecef = pv.LtpToEcef(ltpPosition, origin);
+Console.WriteLine(ecef);
+
+// Prints
+// X: 6295380.62181266, Y: -880663.1908122151, Z: 517316.47438104654
+```
 
 Image credits:
 
