@@ -76,6 +76,17 @@ Console.WriteLine(ecef);
 // X: 6295380.62181266, Y: -880663.1908122151, Z: 517316.47438104654
 ```
 
+**Convert local tangent plane to Azimuth, Elevation, Distance**
+```
+var pv = new PositionConverter();
+LtpPosition ltpPosition = new LtpPosition(100.0, 200.0, -300.0);
+var azimuthElevationRange = pv.LtpToAer(ltpPosition);
+Console.WriteLine(azimuthElevationRange);
+
+// Prints
+Azimuth:63.434948822922, Elevation:53.300774799510116,Distance:374.16573867739413 
+```
+
 Image credits:
 
 - https://standards.sedris.org
