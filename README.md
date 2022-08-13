@@ -97,14 +97,28 @@ Console.WriteLine(ecef);
 
 **Convert local tangent plane to Azimuth, Elevation, Distance**
 ```c#
-var pv = new PositionConverter();
+var pc = new PositionConverter();
 LtpPosition ltpPosition = new LtpPosition(100.0, 200.0, -300.0);
-var azimuthElevationRange = pv.LtpToAer(ltpPosition);
+var azimuthElevationRange = pc.LtpToAer(ltpPosition);
 Console.WriteLine(azimuthElevationRange);
 
 // Prints
 // Azimuth:63.434948822922, Elevation:53.300774799510116,Distance:374.16573867739413 
 ```
+
+**Convert ECEF to local tangent plane**
+```c#
+var pc = new PositionConverter();
+GeoPosition origin = new GeoPosition(Angle.FromDegrees(32.18), Angle.FromDegrees(34.89),Distance.FromMeters(1000));
+EcefPosition ecefPosition = new EcefPosition(4431798.0, 3091247.0, 3378380.0);
+LtpPosition ltp = pc.EcefToLtp(ecefPosition, origin);
+Console.WriteLine(ltp.ToStringNed());
+
+// Prints
+// Azimuth:63.434948822922, Elevation:53.300774799510116,Distance:374.16573867739413 
+
+```
+
 
 Image credits:
 
