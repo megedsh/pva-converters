@@ -28,5 +28,16 @@ namespace PvaConverters.Model.LocalTangentPlane
         {
             return $"{base.ToString()}, {nameof(East)}: {East}, {nameof(West)}: {West}, {nameof(North)}: {North}, {nameof(South)}: {South}, {nameof(Up)}: {Up}, {nameof(Down)}: {Down}";
         }
+
+
+        public string ToStringEnu()
+        {
+            return $"{nameof(East)}: {East}, {nameof(North)}: {North}, {nameof(Up)}: {Up}";
+        }
+        
+        public string ToStringNed()
+        {
+            return $"{nameof(North)}: {North}, {nameof(East)}: {East}, {nameof(Down)}: {Down}";
+        }
     }
 }
