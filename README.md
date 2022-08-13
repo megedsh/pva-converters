@@ -1,4 +1,23 @@
-# Position, Velocity, Acceleration Converters
+# 3D Position, Velocity, Acceleration Converters
+
+A simple .NET library that is designed to assist with geographic coordinats, velocity and acceleration conversions.
+There are many libraries out there, but I couldnt find one that meets all my needs, especialy 3D conversions.
+
+### Is this code usefull for you? Let me know!
+This library was built for one of my projects. Please make effort worth while by dropping me a line and telling me what you are using it for.
+I would especialy appreciate:
+- Addtional unit tests for functionality I have not yet covered.
+- Documentation additions.
+
+
+### Releases and Licensing
+I am not releasing this software in an official release at the moment.
+
+You are free to download it, and use it as you like, give credit, or not.
+
+If you decide to release this yourself, please give credit to this project.
+
+
 
 ## Position Converters
 Convert between 4 types of geographical coordinates systems.
@@ -16,7 +35,7 @@ Convert between 4 types of geographical coordinates systems.
 
 ![This is an image](/Images/geopos.png)
 
-4. **Local Horizontal Coordinates** (also known as polar position, or Azimuth, Elevation, Range) 
+4. **Local Horizontal Coordinates** (also known as polar position, or Azimuth, Elevation, Range)  https://en.wikipedia.org/wiki/Horizontal_coordinate_system
 
 ![This is an image](/Images/lhp.png)
 
