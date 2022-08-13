@@ -3,7 +3,7 @@ using PvaConverters.Model.AzimuthElevation;
 using PvaConverters.Model.Ecef;
 using PvaConverters.Model.LocalTangentPlane;
 
-namespace PvaConverters.Converters
+namespace PvaConverters.Interfaces
 {
     public interface IPositionConverter
     {
