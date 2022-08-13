@@ -115,7 +115,7 @@ LtpPosition ltp = pc.EcefToLtp(ecefPosition, origin);
 Console.WriteLine(ltp.ToStringNed());
 
 // Prints
-// Azimuth:63.434948822922, Elevation:53.300774799510116,Distance:374.16573867739413 
+// North: 912.2333051757887, East: 600.1579475904904, Down: 500.2639559134841
 
 ```
 
