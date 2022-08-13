@@ -18,6 +18,7 @@ namespace PvaConverters.Converters
         protected abstract TEcef createEcef(double x, double y, double z);
         protected abstract TLtp createLtp(double north, double east, double down);
         protected abstract TScalar createScalar(double scalar);
+        protected abstract TAeronautical createAeronauticalVector(Angle course, TScalar vertical, TScalar horizontal);
 
 
         #region Ltp
@@ -46,13 +47,11 @@ namespace PvaConverters.Converters
             return createLtp(v.X, v.Y, v.Z);
         }
 
-        public void EcefToAeronautical(out Angle course,
-            out TScalar vertical,
-            out TScalar horiz,
-            TEcef ecef, GeoPosition originGeoPosition)
+        public TAeronautical EcefToAeronautical(TEcef ecef, GeoPosition originGeoPosition)
         {
             var ned = EcefToLtp(ecef.X, ecef.Y, ecef.Z, originGeoPosition);
-            nedToAeronautical(out course, out vertical, out horiz, ned);
+            nedToAeronautical(out Angle course, out TScalar vertical, out TScalar horiz, ned);
+            return createAeronauticalVector(course, vertical, horiz);
         }
 
         #endregion

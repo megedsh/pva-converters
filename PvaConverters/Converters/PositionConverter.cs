@@ -8,7 +8,7 @@ using PvaConverters.Mtrx;
 
 namespace PvaConverters.Converters
 {
-    public class PositionConverter
+    public class PositionConverter : IPositionConverter
     {
         #region Ltp
 
