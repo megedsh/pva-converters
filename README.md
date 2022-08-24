@@ -52,13 +52,13 @@ Console.WriteLine(geoToLtp.ToStringEnu());
 // East: -50387.38398064566, North: 5199.166000297293, Up: 2799.350897683762
 ```
 
-**Convert two Lla-position points to Azimuth elevation range**
+**Convert two Lla-position points to Azimuth elevation distance**
 ```c#
 var pc = new PositionConverter();
 LlaPosition origin = new LlaPosition(4.682880, -7.965253, 0);
 LlaPosition target = new LlaPosition(4.782880, -7.985253, 3000);
-var azimuthElevationRange = pc.LlaToAed(origin,target );
-Console.WriteLine(azimuthElevationRange);
+var azimuthElevationDistance = pc.LlaToAed(origin,target );
+Console.WriteLine(azimuthElevationDistance);
 
 // Prints
 // Azimuth:348.6549994285944, Elevation:14.840890085414388,Distance:11673.341221811483 
