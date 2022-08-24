@@ -1,22 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using PvaConverters.Model.Scalars;
-
-namespace PvaConverters.Model.Ecef
+﻿namespace PvaConverters.Model.Ecef
 {
-    public class EcefVelocity : EcefBase<Velocity>
+    public struct EcefVelocity : IEcef
     {
+        public static EcefVelocity Empty = new EcefVelocity(double.NaN, double.NaN, double.NaN);
+        public double X { get; }
+        public double Y { get; }
+        public double Z { get; }
 
-        public EcefVelocity(double xMetersPerSec, double yMetersPerSec, double zMetersPerSec) : this(Velocity.FromMetersPerSecond(xMetersPerSec), Velocity.FromMetersPerSecond(yMetersPerSec), Velocity.FromMetersPerSecond(zMetersPerSec))
+        public EcefVelocity(double xMetersPerSec, double yMetersPerSec, double zMetersPerSec)
         {
+            X = xMetersPerSec;
+            Y = yMetersPerSec;
+            Z = zMetersPerSec;
         }
 
-        public EcefVelocity(Velocity x, Velocity y, Velocity z) : base(x.MetersPerSecond, y.MetersPerSecond, z.MetersPerSecond)
+        public bool Equals(EcefVelocity other)
         {
-            XAxis = x;
-            YAxis = y;
-            ZAxis = z;
+            return X.Equals(other.X) && Y.Equals(other.Y) && Z.Equals(other.Z);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is EcefVelocity other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = X.GetHashCode();
+                hashCode = (hashCode * 397) ^ Y.GetHashCode();
+                hashCode = (hashCode * 397) ^ Z.GetHashCode();
+                return hashCode;
+            }
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(X)}: {X}, {nameof(Y)}: {Y}, {nameof(Z)}: {Z}";
         }
     }
 }

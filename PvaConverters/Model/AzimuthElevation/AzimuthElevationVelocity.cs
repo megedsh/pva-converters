@@ -1,18 +1,43 @@
-﻿using PvaConverters.Model.Scalars;
-
-namespace PvaConverters.Model.AzimuthElevation
+﻿namespace PvaConverters.Model.AzimuthElevation
 {
-    public class AzimuthElevationVelocity : AzimuthElevationBase<Velocity>
+    public struct AzimuthElevationVelocity : IAzimuthElevation
     {
-        public Velocity Velocity => Scalar;
+        public double Velocity { get; }
+        public double Azimuth { get; }
+        public double Elevation { get; }
+        public double GetScalar() => Velocity;
 
-        public AzimuthElevationVelocity(double azimuthRad, double elevationRad, double velocityMetersPerSec) : this(Angle.FromRadians(azimuthRad), Angle.FromRadians(elevationRad), Velocity.FromMetersPerSecond(velocityMetersPerSec))
+        public AzimuthElevationVelocity(double azimuthDeg, double elevationDeg, double metersPerSec)
         {
+            Azimuth = azimuthDeg;
+            Elevation = elevationDeg;
+            Velocity = metersPerSec;
         }
 
-        public AzimuthElevationVelocity(Angle azimuth, Angle elevation, Velocity velocity) : base(azimuth, elevation, velocity)
+        public bool Equals(AzimuthElevationVelocity other)
         {
+            return Azimuth.Equals(other.Azimuth) && Elevation.Equals(other.Elevation) && Velocity.Equals(other.Velocity);
+        }
 
+        public override bool Equals(object obj)
+        {
+            return obj is AzimuthElevationVelocity other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = Azimuth.GetHashCode();
+                hashCode = (hashCode * 397) ^ Elevation.GetHashCode();
+                hashCode = (hashCode * 397) ^ Velocity.GetHashCode();
+                return hashCode;
+            }
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(Azimuth)}: {Azimuth}, {nameof(Elevation)}: {Elevation}, {nameof(Velocity)}: {Velocity}";
         }
     }
 }

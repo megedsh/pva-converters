@@ -4,38 +4,39 @@ using PvaConverters.Model;
 using PvaConverters.Model.AzimuthElevation;
 using PvaConverters.Model.Ecef;
 using PvaConverters.Model.LocalTangentPlane;
-using PvaConverters.Model.Scalars;
 using PvaConverters.Mtrx;
 
 namespace PvaConverters.Converters
 {
     public class PositionConverter : IPositionConverter
     {
+        private static readonly double s_piTo180 = (Math.PI / 180.0);
+
         #region Ltp
 
-        public GeoPosition LtpToGeo(LtpPosition ltpPosition, GeoPosition origin, Datum datum = null) => ltpToGeo(ltpPosition, origin, datum);
-        public EcefPosition LtpToEcef(LtpPosition ltpPosition, GeoPosition origin, Datum datum = null) => ltpToEcef(ltpPosition, origin, datum);
+        public LlaPosition LtpToLla(LtpPosition ltpPosition, LlaPosition origin, Datum datum = null) => ltpToLla(ltpPosition, origin, datum);
+        public EcefPosition LtpToEcef(LtpPosition ltpPosition, LlaPosition origin, Datum datum = null) => ltpToEcef(ltpPosition, origin, datum);
+
         public AzimuthElevationRange LtpToAer(LtpPosition ltpPosition)
         {
-            fromCartesian3DToPolar3D(ltpPosition.North.Meters, ltpPosition.East.Meters, ltpPosition.Up.Meters, out double alphaRadians, out double betaRadians, out double r);
+            fromCartesian3DToPolar3D(ltpPosition.North, ltpPosition.East, ltpPosition.Up, out double alphaRadians, out double betaRadians, out double r);
 
-            return new AzimuthElevationRange(Angle.FromRadians(alphaRadians),
-                Angle.FromRadians(betaRadians), Distance.FromMeters(r));
+            return new AzimuthElevationRange(alphaRadians / s_piTo180, betaRadians / s_piTo180, r);
         }
 
         #endregion
 
-        #region Geo
+        #region Lla
 
-        public EcefPosition GeoToEcef(GeoPosition geo, Datum datum = null)
+        public EcefPosition LlaToEcef(LlaPosition lla, Datum datum = null)
         {
-            double lat = geo.Latitude.Radians;
-            double lon = geo.Longitude.Radians;
-            double alt = geo.Altitude.Meters;
-            return GeoToEcef(lat, lon, alt);
+            double lat = lla.Latitude * s_piTo180;
+            double lon = lla.Longitude * s_piTo180;
+            double alt = lla.Altitude;
+            return LlaToEcef(lat, lon, alt);
         }
 
-        public EcefPosition GeoToEcef(double latRad, double lonRad, double altMeters, Datum datum = null)
+        public EcefPosition LlaToEcef(double latRad, double lonRad, double altMeters, Datum datum = null)
         {
             if (datum == null)
             {
@@ -60,34 +61,33 @@ namespace PvaConverters.Converters
             return new EcefPosition(x, y, z);
         }
 
-        public LtpPosition GeoToLtp(GeoPosition target, GeoPosition origin, Datum datum = null)
+        public LtpPosition LlaToLtp(LlaPosition target, LlaPosition origin, Datum datum = null)
         {
-            EcefPosition ecef = GeoToEcef(target);
+            EcefPosition ecef = LlaToEcef(target);
             return ecefToLtp(ecef, origin, datum);
         }
 
-        public AzimuthElevationRange GeoToAer(GeoPosition origin, GeoPosition target, Datum datum = null)
+        public AzimuthElevationRange LlaToAer(LlaPosition origin, LlaPosition target, Datum datum = null)
         {
-            LtpPosition ltp = GeoToLtp(target, origin, datum);
-            fromCartesian3DToPolar3D(ltp.North.Meters, ltp.East.Meters, ltp.Up.Meters, out double alphaRadians, out double betaRadians, out double r);
+            LtpPosition ltp = LlaToLtp(target, origin, datum);
+            fromCartesian3DToPolar3D(ltp.North, ltp.East, ltp.Up, out double alphaRadians, out double betaRadians, out double r);
 
-            return new AzimuthElevationRange(Angle.FromRadians(alphaRadians),
-                Angle.FromRadians(betaRadians), Distance.FromMeters(r));
+            return new AzimuthElevationRange(alphaRadians / s_piTo180, betaRadians / s_piTo180, r);
         }
 
         #endregion
 
         #region Ecef
 
-        public LtpPosition EcefToLtp(EcefPosition ecefPosition, GeoPosition origin, Datum datum = null) => ecefToLtp(ecefPosition, origin, datum);
+        public LtpPosition EcefToLtp(EcefPosition ecefPosition, LlaPosition origin, Datum datum = null) => ecefToLtp(ecefPosition, origin, datum);
 
 
-        public GeoPosition EcefToGeo(EcefPosition ecef, Datum datum = null)
+        public LlaPosition EcefToLla(EcefPosition ecef, Datum datum = null)
         {
-            return EcefToGeo(ecef.X, ecef.Y, ecef.Z);
+            return EcefToLla(ecef.X, ecef.Y, ecef.Z);
         }
 
-        public GeoPosition EcefToGeo(double xMeters, double yMeters, double zMeters, Datum datum = null)
+        public LlaPosition EcefToLla(double xMeters, double yMeters, double zMeters, Datum datum = null)
         {
             if (datum == null)
             {
@@ -108,45 +108,44 @@ namespace PvaConverters.Converters
             double n = majorAxis / Math.Sqrt(1 - ea * ea * Math.Sin(lat) * Math.Sin(lat));
             double alt = p / Math.Cos(lat) - n;
 
-            return new GeoPosition(Angle.FromRadians(lat), Angle.FromRadians(lon), Distance.FromMeters(alt));
+            return new LlaPosition(lat / s_piTo180, lon / s_piTo180, alt);
         }
 
-        public AzimuthElevationRange EcefToAer(EcefPosition target, GeoPosition origin, Datum datum = null)
+        public AzimuthElevationRange EcefToAer(EcefPosition target, LlaPosition origin, Datum datum = null)
         {
             LtpPosition ltp = EcefToLtp(target, origin, datum);
 
-            fromCartesian3DToPolar3D(ltp.North.Meters, ltp.East.Meters, ltp.Up.Meters, out double alphaRadians, out double betaRadians, out double r);
+            fromCartesian3DToPolar3D(ltp.North, ltp.East, ltp.Up, out double alphaRadians, out double betaRadians, out double r);
 
-            return new AzimuthElevationRange(Angle.FromRadians(alphaRadians),
-                Angle.FromRadians(betaRadians), Distance.FromMeters(r));
+            return new AzimuthElevationRange(alphaRadians / s_piTo180, betaRadians / s_piTo180, r);
         }
 
         #endregion
 
         #region AzimuthElevationRange
 
-        public EcefPosition AerToEcef(GeoPosition origin, AzimuthElevationRange azimuthElevationRange, Datum datum = null)
+        public EcefPosition AerToEcef(LlaPosition origin, AzimuthElevationRange azimuthElevationRange, Datum datum = null)
         {
-            GeoPosition geo = AerToGeo(origin, azimuthElevationRange, datum);
-            return GeoToEcef(geo);
+            LlaPosition lla = AerToLla(origin, azimuthElevationRange, datum);
+            return LlaToEcef(lla);
         }
 
 
-        public GeoPosition AerToGeo(GeoPosition origin, AzimuthElevationRange azimuthElevationRange, Datum datum = null)
+        public LlaPosition AerToLla(LlaPosition origin, AzimuthElevationRange azimuthElevationRange, Datum datum = null)
         {
-            fromPolar3DToCartesian3D(getNotNaN(azimuthElevationRange.Azimuth.Radians),
-                getNotNaN(azimuthElevationRange.Elevation.Radians),
-                getNotNaN(azimuthElevationRange.Range.Meters, 1),
+            fromPolar3DToCartesian3D(getNotNaN(azimuthElevationRange.Azimuth * s_piTo180),
+                getNotNaN(azimuthElevationRange.Elevation * s_piTo180),
+                getNotNaN(azimuthElevationRange.Distance, 1),
                 out double x, out double y, out double z);
 
-            return ltpToGeo(new LtpPosition(x, y, -z), origin);
+            return ltpToLla(new LtpPosition(x, y, -z), origin);
         }
 
-        public LtpPosition AerToLtp(GeoPosition origin, AzimuthElevationRange azimuthElevationRange, Datum datum = null)
+        public LtpPosition AerToLtp(LlaPosition origin, AzimuthElevationRange azimuthElevationRange, Datum datum = null)
         {
-            fromPolar3DToCartesian3D(getNotNaN(azimuthElevationRange.Azimuth.Radians),
-                getNotNaN(azimuthElevationRange.Elevation.Radians),
-                getNotNaN(azimuthElevationRange.Range.Meters, 1),
+            fromPolar3DToCartesian3D(getNotNaN(azimuthElevationRange.Azimuth * s_piTo180),
+                getNotNaN(azimuthElevationRange.Elevation * s_piTo180),
+                getNotNaN(azimuthElevationRange.Distance, 1),
                 out double x, out double y, out double z);
 
             return new LtpPosition(x, y, -z);
@@ -156,27 +155,27 @@ namespace PvaConverters.Converters
 
         #region private
 
-        private EcefPosition ltpToEcef(LtpPosition ltpPosition, GeoPosition origin, Datum datum = null)
+        private EcefPosition ltpToEcef(LtpPosition ltpPosition, LlaPosition origin, Datum datum = null)
         {
-            double x = ltpPosition.East.Meters;
-            double y = ltpPosition.North.Meters;
-            double z = ltpPosition.Up.Meters;
+            double x = ltpPosition.East;
+            double y = ltpPosition.North;
+            double z = ltpPosition.Up;
 
             getEcefVectorFromEnu(origin, x, y, z, out double ex, out double ey, out double ez, datum);
             return new EcefPosition(ex, ey, ez);
         }
 
-        private GeoPosition ltpToGeo(LtpPosition ltpPosition, GeoPosition origin, Datum datum = null)
+        private LlaPosition ltpToLla(LtpPosition ltpPosition, LlaPosition origin, Datum datum = null)
         {
-            double x = ltpPosition.East.Meters;
-            double y = ltpPosition.North.Meters;
-            double z = ltpPosition.Up.Meters;
+            double x = ltpPosition.East;
+            double y = ltpPosition.North;
+            double z = ltpPosition.Up;
 
             getEcefVectorFromEnu(origin, x, y, z, out double ex, out double ey, out double ez, datum);
-            return EcefToGeo(ex, ey, ez, datum);
+            return EcefToLla(ex, ey, ez, datum);
         }
 
-        private void getEcefVectorFromEnu(GeoPosition origin, double eastMeters, double northMeters, double upMeters,
+        private void getEcefVectorFromEnu(LlaPosition origin, double eastMeters, double northMeters, double upMeters,
             out double x, out double y, out double z, Datum datum = null)
         {
             double[,] T = getEnuToEcefTransformMatrix(origin);
@@ -185,13 +184,13 @@ namespace PvaConverters.Converters
             z = T[2, 0] * eastMeters + T[2, 1] * northMeters + T[2, 2] * upMeters + T[2, 3];
         }
 
-        private LtpPosition ecefToLtp(EcefPosition eceFfromLla, GeoPosition origin, Datum datum = null)
+        private LtpPosition ecefToLtp(EcefPosition eceFfromLla, LlaPosition origin, Datum datum = null)
         {
             ecefToEnuVector(eceFfromLla, origin, datum, out double eastMeters, out double northMeters, out double upMeters);
             return new LtpPosition(northMeters, eastMeters, -upMeters);
         }
 
-        private void ecefToEnuVector(EcefPosition eceFfromLla, GeoPosition origin, Datum datum, out double tx, out double ty, out double tz)
+        private void ecefToEnuVector(EcefPosition eceFfromLla, LlaPosition origin, Datum datum, out double tx, out double ty, out double tz)
         {
             double[,] T = MatrixAlgo.Invert(getEnuToEcefTransformMatrix(origin, datum));
             double[] p = { eceFfromLla.X, eceFfromLla.Y, eceFfromLla.Z };
@@ -201,12 +200,12 @@ namespace PvaConverters.Converters
             tz = T[2, 0] * p[0] + T[2, 1] * p[1] + T[2, 2] * p[2] + T[2, 3];
         }
 
-        private double[,] getEnuToEcefTransformMatrix(GeoPosition origin, Datum datum = null)
+        private double[,] getEnuToEcefTransformMatrix(LlaPosition origin, Datum datum = null)
         {
-            EcefPosition ecef = GeoToEcef(origin, datum);
+            EcefPosition ecef = LlaToEcef(origin, datum);
 
-            double lat = origin.Latitude.Radians;
-            double lon = origin.Longitude.Radians;
+            double lat = origin.Latitude * s_piTo180;
+            double lon = origin.Longitude * s_piTo180;
             double sa = Math.Sin(lat);
             double ca = Math.Cos(lat);
             double so = Math.Sin(lon);

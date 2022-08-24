@@ -1,15 +1,12 @@
-﻿using PvaConverters.Model.Scalars;
-
-namespace PvaConverters.Model.LocalTangentPlane
+﻿namespace PvaConverters.Model.LocalTangentPlane
 {
-    public interface ILocalTangentPlane<T>
-    where T: IScalar
+    public interface ILocalTangentPlane
     {
-        T East { get; }
-        T West { get; }
-        T North { get; }
-        T South { get; }
-        T Up { get; }
-        T Down { get; }
+        double East { get; }
+        double West { get; }
+        double North { get; }
+        double South { get; }
+        double Up { get; }
+        double Down { get; }
     }
 }

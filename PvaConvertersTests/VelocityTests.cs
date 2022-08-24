@@ -3,21 +3,20 @@ using PvaConverters.Model;
 using PvaConverters.Model.Aeronautical;
 using PvaConverters.Model.Ecef;
 using PvaConverters.Model.LocalTangentPlane;
-using PvaConverters.Model.Scalars;
 
 namespace PvaConvertersTests
 {
     public class VelocityTests
     {
-        public static readonly GeoPosition s_origin = GeoPosition.FromDeg(32.086D, 34.789D, 0);
+        public static readonly LlaPosition s_origin = new LlaPosition(32.086D, 34.789D, 0);
 
         readonly VelocityConverter subject = new VelocityConverter();
 
         [Test]
         public void AeronauticalToLtp()
         {
-            Angle azimuth = Angle.FromDegrees(63.55);
-            var aeronauticalVelocity = new AeronauticalVelocity(azimuth, Velocity.FromMetersPerSecond(3.22), Velocity.FromMetersPerSecond(1.22));
+            double azimuth = 63.55;
+            var aeronauticalVelocity = new AeronauticalVelocity(azimuth, 3.22, 1.22);
             LtpVelocity ltp = subject.AeronauticalToLtp(aeronauticalVelocity);
             assertLtp(ltp, 0.543408332214331, 1.0922945502381851, -3.22);
         }
@@ -48,9 +47,9 @@ namespace PvaConvertersTests
 
         private void assertLtp(LtpVelocity ltp, double north, double east, double down)
         {
-            Assert.AreEqual(north, ltp.North.MetersPerSecond);
-            Assert.AreEqual(east, ltp.East.MetersPerSecond);
-            Assert.AreEqual(down, ltp.Down.MetersPerSecond);
+            Assert.AreEqual(north, ltp.North);
+            Assert.AreEqual(east, ltp.East);
+            Assert.AreEqual(down, ltp.Down);
         }
     }
 }

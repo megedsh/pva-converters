@@ -1,28 +1,43 @@
-﻿using PvaConverters.Model.Scalars;
-
-namespace PvaConverters.Model.AzimuthElevation
+﻿namespace PvaConverters.Model.AzimuthElevation
 {
-    public class AzimuthElevationRange:AzimuthElevationBase<Distance>
+    public struct AzimuthElevationRange : IAzimuthElevation
     {
-        public Distance Range => Scalar;
+        public double Distance { get; }
+        public double Azimuth { get; }
+        public double Elevation { get; }
+        public double GetScalar() => Distance;
 
-        public AzimuthElevationRange(double azimuthRad, double elevationRad, double rangeMeters) : this(Angle.FromRadians(azimuthRad), Angle.FromRadians(elevationRad), Distance.FromMeters(rangeMeters))
+        public AzimuthElevationRange(double azimuthDeg, double elevationDeg, double distanceMeters)
         {
+            Azimuth = azimuthDeg;
+            Elevation = elevationDeg;
+            Distance = distanceMeters;
         }
 
-        public AzimuthElevationRange(Angle azimuth, Angle elevation, Distance range) : base(azimuth,elevation,range)
+        public bool Equals(AzimuthElevationRange other)
         {
-            
+            return Azimuth.Equals(other.Azimuth) && Elevation.Equals(other.Elevation) && Distance.Equals(other.Distance);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is AzimuthElevationRange other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = Azimuth.GetHashCode();
+                hashCode = (hashCode * 397) ^ Elevation.GetHashCode();
+                hashCode = (hashCode * 397) ^ Distance.GetHashCode();
+                return hashCode;
+            }
         }
 
         public override string ToString()
         {
-            return $"{base.ToString()}";
+            return $"{nameof(Azimuth)}: {Azimuth}, {nameof(Elevation)}: {Elevation}, {nameof(Distance)}: {Distance}";
         }
-
-        //public override string ToString()
-        //{
-        //    return $"{nameof(Azimuth)}:{Azimuth}, {nameof(Elevation)}:{Elevation},{nameof(Range)}:{Range} ";
-        //}
     }
 }

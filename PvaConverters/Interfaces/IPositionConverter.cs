@@ -7,19 +7,19 @@ namespace PvaConverters.Interfaces
 {
     public interface IPositionConverter
     {
-        GeoPosition LtpToGeo(LtpPosition ltpPosition, GeoPosition origin, Datum datum = null);
-        EcefPosition LtpToEcef(LtpPosition ltpPosition, GeoPosition origin, Datum datum = null);
+        LlaPosition LtpToLla(LtpPosition ltpPosition, LlaPosition origin, Datum datum = null);
+        EcefPosition LtpToEcef(LtpPosition ltpPosition, LlaPosition origin, Datum datum = null);
         AzimuthElevationRange LtpToAer(LtpPosition ltpPosition);
-        EcefPosition GeoToEcef(GeoPosition geo, Datum datum = null);
-        EcefPosition GeoToEcef(double latRad, double lonRad, double altMeters, Datum datum = null);
-        LtpPosition GeoToLtp(GeoPosition target, GeoPosition origin, Datum datum = null);
-        AzimuthElevationRange GeoToAer(GeoPosition origin, GeoPosition target, Datum datum = null);
-        LtpPosition EcefToLtp(EcefPosition ecefPosition, GeoPosition origin, Datum datum = null);
-        GeoPosition EcefToGeo(EcefPosition ecef, Datum datum = null);
-        GeoPosition EcefToGeo(double xMeters, double yMeters, double zMeters, Datum datum = null);
-        AzimuthElevationRange EcefToAer(EcefPosition target, GeoPosition origin, Datum datum = null);
-        EcefPosition AerToEcef(GeoPosition origin, AzimuthElevationRange azimuthElevationRange, Datum datum = null);
-        GeoPosition AerToGeo(GeoPosition origin, AzimuthElevationRange azimuthElevationRange, Datum datum = null);
-        LtpPosition AerToLtp(GeoPosition origin, AzimuthElevationRange azimuthElevationRange, Datum datum = null);
+        EcefPosition LlaToEcef(LlaPosition lla, Datum datum = null);
+        EcefPosition LlaToEcef(double latRad, double lonRad, double altMeters, Datum datum = null);
+        LtpPosition LlaToLtp(LlaPosition target, LlaPosition origin, Datum datum = null);
+        AzimuthElevationRange LlaToAer(LlaPosition origin, LlaPosition target, Datum datum = null);
+        LtpPosition EcefToLtp(EcefPosition ecefPosition, LlaPosition origin, Datum datum = null);
+        LlaPosition EcefToLla(EcefPosition ecef, Datum datum = null);
+        LlaPosition EcefToLla(double xMeters, double yMeters, double zMeters, Datum datum = null);
+        AzimuthElevationRange EcefToAer(EcefPosition target, LlaPosition origin, Datum datum = null);
+        EcefPosition AerToEcef(LlaPosition origin, AzimuthElevationRange azimuthElevationRange, Datum datum = null);
+        LlaPosition AerToLla(LlaPosition origin, AzimuthElevationRange azimuthElevationRange, Datum datum = null);
+        LtpPosition AerToLtp(LlaPosition origin, AzimuthElevationRange azimuthElevationRange, Datum datum = null);
     }
 }

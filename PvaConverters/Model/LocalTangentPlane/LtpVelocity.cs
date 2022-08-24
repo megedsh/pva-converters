@@ -1,27 +1,55 @@
-﻿using PvaConverters.Model.Scalars;
-
-namespace PvaConverters.Model.LocalTangentPlane
+﻿namespace PvaConverters.Model.LocalTangentPlane
 {
-    public class LtpVelocity : ILocalTangentPlane<Velocity>
+    public struct LtpVelocity : ILocalTangentPlane
     {
-        public LtpVelocity(Velocity north, Velocity east, Velocity down) : this(north.MetersPerSecond, east.MetersPerSecond, down.MetersPerSecond)
+        public double East { get; }
+        public double West { get; }
+        public double North { get; }
+        public double South { get; }
+        public double Up { get; }
+        public double Down { get; }
+
+        public LtpVelocity(double northMetersPerSec, double eastMetersPerSec, double downMetersPerSec)
         {
-        }
-        public LtpVelocity(double northMetersPerSec, double eastMetersPerSec, double downMetersPerSec) 
-        {
-            North = Velocity.FromMetersPerSecond(northMetersPerSec);
-            East = Velocity.FromMetersPerSecond(eastMetersPerSec);
-            West = Velocity.FromMetersPerSecond(-eastMetersPerSec);
-            South = Velocity.FromMetersPerSecond(-northMetersPerSec);
-            Up = Velocity.FromMetersPerSecond(-downMetersPerSec);
-            Down = Velocity.FromMetersPerSecond(downMetersPerSec);
+            North = northMetersPerSec;
+            East = eastMetersPerSec;
+            West = -eastMetersPerSec;
+            South = -northMetersPerSec;
+            Up = -downMetersPerSec;
+            Down = downMetersPerSec;
         }
 
-        public Velocity East { get; protected set; }
-        public Velocity West { get; protected set; }
-        public Velocity North { get; protected set; }
-        public Velocity South { get; protected set; }
-        public Velocity Up { get; protected set; }
-        public Velocity Down { get; protected set; }
+        public bool Equals(LtpVelocity other)
+        {
+            return East.Equals(other.East) && North.Equals(other.North) && Down.Equals(other.Down);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is LtpVelocity other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = East.GetHashCode();
+                hashCode = (hashCode * 397) ^ North.GetHashCode();
+                hashCode = (hashCode * 397) ^ Down.GetHashCode();
+                return hashCode;
+            }
+        }
+
+        public override string ToString() => ToStringNed();
+
+        public string ToStringNed()
+        {
+            return $"{nameof(North)}: {North}, {nameof(East)}: {East}, {nameof(Down)}: {Down}";
+        }
+
+        public string ToStringEnu()
+        {
+            return $"{nameof(East)}: {East}, {nameof(North)}: {North}, {nameof(Up)}: {Up}";
+        }
     }
 }

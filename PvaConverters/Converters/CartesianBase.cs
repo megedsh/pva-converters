@@ -4,100 +4,104 @@ using PvaConverters.Model.Aeronautical;
 using PvaConverters.Model.AzimuthElevation;
 using PvaConverters.Model.Ecef;
 using PvaConverters.Model.LocalTangentPlane;
-using PvaConverters.Model.Scalars;
 using PvaConverters.Mtrx;
 
 namespace PvaConverters.Converters
 {
-    public abstract class CartesianBase<TLtp, TEcef, TScalar, TAeronautical>
-        where TScalar : IScalar
-        where TLtp : ILocalTangentPlane<TScalar>
-        where TEcef : EcefBase<TScalar>
-        where TAeronautical : AeronauticalVector<TScalar>
+    public abstract class CartesianBase<TLtp, TEcef, TAeronautical>
+        where TLtp : ILocalTangentPlane
+        where TEcef : IEcef
+        where TAeronautical : IAeronauticalVector
     {
+        private static readonly double s_piTo180 = (Math.PI / 180.0);
         protected abstract TEcef createEcef(double x, double y, double z);
         protected abstract TLtp createLtp(double north, double east, double down);
-        protected abstract TScalar createScalar(double scalar);
-        protected abstract TAeronautical createAeronauticalVector(Angle course, TScalar vertical, TScalar horizontal);
+        protected abstract TAeronautical createAeronauticalVector(double courseDeg, double vertical, double horizontal);
 
 
         #region Ltp
 
-        public TEcef LtpToEcef(TLtp ltp, GeoPosition originGeoPosition) => LtpToEcef(ltp.North.AsDouble(), ltp.East.AsDouble(), ltp.Down.AsDouble(), originGeoPosition);
+        public TEcef LtpToEcef(TLtp ltp, LlaPosition originLlaPosition) => LtpToEcef(ltp.North, ltp.East, ltp.Down, originLlaPosition);
 
-        public TEcef LtpToEcef(double north, double east, double down, GeoPosition originGeoPosition)
+        public TEcef LtpToEcef(double north, double east, double down, LlaPosition originLlaPosition)
         {
-            Vector3d ecef = CommonAlgo.TransformNedToEcef(north, east, down, originGeoPosition);
-            return createEcef(ecef.X, ecef.Y, ecef.Z);
+            CommonAlgo.TransformNedToEcef(north, east, down, originLlaPosition, out double x, out double y, out double z);
+            return createEcef(x, y, z);
         }
 
         #endregion
 
         #region Ecef
 
-        public TLtp EcefToLtp(TEcef ecef, GeoPosition originGeoPosition)
+        public TLtp EcefToLtp(TEcef ecef, LlaPosition originLlaPosition)
         {
-            return EcefToLtp(ecef.X, ecef.Y, ecef.Z, originGeoPosition);
+            return EcefToLtp(ecef.X, ecef.Y, ecef.Z, originLlaPosition);
         }
 
-        public TLtp EcefToLtp(double x, double y, double z, GeoPosition originGeoPosition)
+        public TLtp EcefToLtp(double x, double y, double z, LlaPosition originLlaPosition)
         {
-            Vector3d v = getNedVectorFromEcef(x, y, z, originGeoPosition);
+            IEcef v = getNedVectorFromEcef(x, y, z, originLlaPosition);
 
             return createLtp(v.X, v.Y, v.Z);
         }
 
-        public TAeronautical EcefToAeronautical(TEcef ecef, GeoPosition originGeoPosition)
+        public TAeronautical EcefToAeronautical(TEcef ecef, LlaPosition originLlaPosition)
         {
-            var ned = EcefToLtp(ecef.X, ecef.Y, ecef.Z, originGeoPosition);
-            nedToAeronautical(out Angle course, out TScalar vertical, out TScalar horiz, ned);
-            return createAeronauticalVector(course, vertical, horiz);
+            var ned = EcefToLtp(ecef.X, ecef.Y, ecef.Z, originLlaPosition);
+            nedToAeronautical(out double courseDeg, out double vertical, out double horiz, ned);
+            return createAeronauticalVector(courseDeg, vertical, horiz);
         }
 
         #endregion
 
         #region Aeronautical
 
-        public TEcef AeronauticalToEcef(TAeronautical an, GeoPosition originGeoPosition) => AeronauticalToEcef(an.Course.Radians, an.Vertical.AsDouble(), an.Horizontal.AsDouble(), originGeoPosition);
+        public TEcef AeronauticalToEcef(TAeronautical an, LlaPosition originLlaPosition) => AeronauticalToEcef(an.Course, an.GetVertical(), an.GetHorizontal(), originLlaPosition);
 
         public TEcef AeronauticalToEcef(double courseRad, double vertical,
-            double horizontal, GeoPosition originGeoPosition)
+            double horizontal, LlaPosition originLlaPosition)
         {
-            Vector3d nedVector = getNedVector(courseRad, vertical, horizontal);
+            getNedVector(courseRad, vertical, horizontal,
+                out double north,
+                out double east,
+                out double down);
 
-            return LtpToEcef(nedVector.X, nedVector.Y, nedVector.Z, originGeoPosition);
+            return LtpToEcef(north, east, down, originLlaPosition);
         }
 
         public TLtp AeronauticalToLtp(TAeronautical an)
         {
-            var nedVector = getNedVector(an.Course.Radians, an.Vertical.AsDouble(), an.Horizontal.AsDouble());
-            return createLtp(nedVector.X, nedVector.Y, nedVector.Z);
+            getNedVector(an.Course, an.GetVertical(), an.GetHorizontal(),
+                out double north,
+                out double east,
+                out double down);
+            return createLtp(north, east, down);
         }
 
         #endregion
 
         #region private
 
-        private static Vector3d getNedVectorFromEcef(double x,
+        private IEcef getNedVectorFromEcef(double x,
             double y,
-            double z, GeoPosition originGeoPosition)
+            double z, LlaPosition originLlaPosition)
         {
-            Matrix m = CommonAlgo.GeoPositionToEcefMatrix(originGeoPosition);
+            Matrix m = CommonAlgo.GeoPositionToEcefMatrix(originLlaPosition);
             Matrix T = m.Transpose();
 
             double ex = T[0, 0] * x + T[0, 1] * y + T[0, 2] * z;
             double ey = T[1, 0] * x + T[1, 1] * y + T[1, 2] * z;
             double ez = T[2, 0] * x + T[2, 1] * y + T[2, 2] * z;
 
-            return new Vector3d(ex, ey, ez);
+            return createEcef(ex, ey, ez);
         }
 
-        private void nedToAeronautical(out Angle course, out TScalar vertical, out TScalar horiz, ILocalTangentPlane<TScalar> ned)
+        private void nedToAeronautical(out double courseDeg, out double vertical, out double horiz, ILocalTangentPlane ned)
         {
             double azRad = 0;
-            double x = ned.North.AsDouble();
-            double y = ned.East.AsDouble();
-            double z = ned.Down.AsDouble();
+            double x = ned.North;
+            double y = ned.East;
+            double z = ned.Down;
 
             double magnitude = Math.Sqrt(x * x + y * y + z * z);
 
@@ -109,23 +113,24 @@ namespace PvaConverters.Converters
                 azRad = num == 0 ? Math.Atan2(normY, normX) : 0.0;
             }
 
-            course = Angle.FromRadians(azRad);
+            courseDeg = azRad / s_piTo180;
             vertical = ned.Up;
-            horiz = createScalar(Math.Sqrt(x * x + y * y));
+            horiz = Math.Sqrt(x * x + y * y);
         }
 
-        private static Vector3d getNedVector(double courseRad, double vertical,
-            double horizontal)
+        private static void getNedVector(double courseDeg,
+            double vertical,
+            double horizontal, out double north, out double east, out double down)
         {
-            double north = horizontal * Math.Cos(courseRad);
-            double east = horizontal * Math.Sin(courseRad);
-            double down = -vertical;
-            return new Vector3d(north, east, down);
+            double courseRad = courseDeg * s_piTo180;
+            north = horizontal * Math.Cos(courseRad);
+            east = horizontal * Math.Sin(courseRad);
+            down = -vertical;
         }
 
         private static Matrix calcRzC(AzimuthElevationRange raePos)
         {
-            double c = raePos.Azimuth.Radians;
+            double c = raePos.Azimuth * s_piTo180;
             double[,] v =
             {
                 { Math.Cos(c), Math.Sin(c), 0.0, 0.0 },
@@ -138,7 +143,7 @@ namespace PvaConverters.Converters
 
         private static Matrix calcRyB(AzimuthElevationRange raePos)
         {
-            double b = raePos.Elevation.Radians;
+            double b = raePos.Elevation * s_piTo180;
             double[,] v =
             {
                 { Math.Cos(b), 0.0, -1 * Math.Sin(b), 0.0 },
@@ -172,9 +177,9 @@ namespace PvaConverters.Converters
         private static Matrix ltpToMatrix4D(TLtp ltp, double val4Th) =>
             new Matrix(new[,]
             {
-                { ltp.North.AsDouble() },
-                { ltp.East.AsDouble() },
-                { ltp.Down.AsDouble() },
+                { ltp.North },
+                { ltp.East },
+                { ltp.Down },
                 { val4Th }
             });
 

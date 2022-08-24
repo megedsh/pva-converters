@@ -1,22 +1,46 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using PvaConverters.Model.Scalars;
-
-namespace PvaConverters.Model.Ecef
+﻿namespace PvaConverters.Model.Ecef
 {
-    public class EcefAcceleration : EcefBase<Acceleration>
+    public class EcefAcceleration : IEcef
     {
+        public static EcefAcceleration Empty = new EcefAcceleration(double.NaN, double.NaN, double.NaN);
+        public double X { get; }
+        public double Y { get; }
+        public double Z { get; }
 
-        public EcefAcceleration(double xMetersPerSquareSec, double yMetersPerSquareSec, double zMetersPerSquareSec) : this(Acceleration.FromMetersPerSquareSecond(xMetersPerSquareSec), Acceleration.FromMetersPerSquareSecond(yMetersPerSquareSec), Acceleration.FromMetersPerSquareSecond(zMetersPerSquareSec))
+        public EcefAcceleration(double xMetersPerSquareSec, double yMetersPerSquareSec, double zMetersPerSquareSec)
         {
+            X = xMetersPerSquareSec;
+            Y = yMetersPerSquareSec;
+            Z = zMetersPerSquareSec;
         }
 
-        public EcefAcceleration(Acceleration x, Acceleration y, Acceleration z) : base(x.MetersPerSquareSecond, y.MetersPerSquareSecond, z.MetersPerSquareSecond)
+        protected bool Equals(EcefAcceleration other)
         {
-            XAxis = x;
-            YAxis = y;
-            ZAxis = z;
+            return X.Equals(other.X) && Y.Equals(other.Y) && Z.Equals(other.Z);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((EcefAcceleration)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = X.GetHashCode();
+                hashCode = (hashCode * 397) ^ Y.GetHashCode();
+                hashCode = (hashCode * 397) ^ Z.GetHashCode();
+                return hashCode;
+            }
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(X)}: {X}, {nameof(Y)}: {Y}, {nameof(Z)}: {Z}";
         }
     }
 }

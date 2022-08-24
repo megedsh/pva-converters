@@ -1,32 +1,55 @@
-﻿using PvaConverters.Model.Scalars;
-
-namespace PvaConverters.Model.LocalTangentPlane
+﻿namespace PvaConverters.Model.LocalTangentPlane
 {
-    public class LtpAcceleration : ILocalTangentPlane<Acceleration>
+    public struct LtpAcceleration : ILocalTangentPlane
     {
+        public double East { get; }
+        public double West { get; }
+        public double North { get; }
+        public double South { get; }
+        public double Up { get; }
+        public double Down { get; }
 
-        public LtpAcceleration(double northMetersPerSec, double eastMetersPerSec, double downMetersPerSec):this(Acceleration.FromMetersPerSquareSecond(northMetersPerSec),
-            Acceleration.FromMetersPerSquareSecond(eastMetersPerSec),
-            Acceleration.FromMetersPerSquareSecond(downMetersPerSec)
-            )
+        public LtpAcceleration(double northMetersPerSquareSec, double eastMetersPerSquareSec, double downMetersPerSquareSec)
         {
+            North = northMetersPerSquareSec;
+            East = eastMetersPerSquareSec;
+            West = -eastMetersPerSquareSec;
+            South = -northMetersPerSquareSec;
+            Up = -downMetersPerSquareSec;
+            Down = downMetersPerSquareSec;
         }
-        public LtpAcceleration(Acceleration north, Acceleration east, Acceleration down)
+
+        public bool Equals(LtpAcceleration other)
         {
-            North = north;
-            East = east;
-            West = -east;
-            South = -north;
-            Up = -down;
-            Down = down;
+            return East.Equals(other.East) && North.Equals(other.North) && Down.Equals(other.Down);
         }
 
+        public override bool Equals(object obj)
+        {
+            return obj is LtpAcceleration other && Equals(other);
+        }
 
-        public Acceleration East { get; protected set; }
-        public Acceleration West { get; protected set; }
-        public Acceleration North { get; protected set; }
-        public Acceleration South { get; protected set; }
-        public Acceleration Up { get; protected set; }
-        public Acceleration Down { get; protected set; }
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = East.GetHashCode();
+                hashCode = (hashCode * 397) ^ North.GetHashCode();
+                hashCode = (hashCode * 397) ^ Down.GetHashCode();
+                return hashCode;
+            }
+        }
+
+        public override string ToString() => ToStringNed();
+
+        public string ToStringNed()
+        {
+            return $"{nameof(North)}: {North}, {nameof(East)}: {East}, {nameof(Down)}: {Down}";
+        }
+
+        public string ToStringEnu()
+        {
+            return $"{nameof(East)}: {East}, {nameof(North)}: {North}, {nameof(Up)}: {Up}";
+        }
     }
 }

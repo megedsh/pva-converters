@@ -12,7 +12,7 @@ Convert between 4 types of geographical coordinates systems.
 
 ![This is an image](/Images/ecef.png)
 
-3. **Geographic Coordinate System** (latitude, longitude, altitude)  https://en.wikipedia.org/wiki/Geographic_coordinate_system
+3. **Lla Coordinate System** (latitude, longitude, altitude)  https://en.wikipedia.org/wiki/Geographic_coordinate_system
 
 ![This is an image](/Images/geopos.png)
 
@@ -23,27 +23,27 @@ Convert between 4 types of geographical coordinates systems.
 
 ### Usage
 
-**Convert Geo-Position to ECEF**
+**Convert Lla-Position to ECEF**
 ```
 var pc = new PositionConverter();
-var lat = Angle.FromDegrees(32.1882286);
-var lon = Angle.FromDegrees(34.8963593);
-var alt = Distance.FromMeters(500.00);
-GeoPosition geo = new GeoPosition(lat, lon, alt);
-EcefPosition ecef = pc.GeoToEcef(geo);
+var lat = 32.1882286;
+var lon = 34.8963593;
+var alt = 500.00;
+LlaPosition geo = new LlaPosition(lat, lon, alt);
+EcefPosition ecef = pc.LlaToEcef(Lla);
 Console.WriteLine(ecef);
 
 // Prints
 // X: 4431798.222675216, Y: 3091246.629098461, Z: 3378380.366578883
 ```
 
-**Convert two geo-position points to Local tangent plane**
+**Convert two Lla-position points to Local tangent plane**
 
 ```
 var pc = new PositionConverter();
-GeoPosition origin = GeoPosition.FromDeg(-51.736538, -59.430458, 0);
-GeoPosition target = GeoPosition.FromDeg(-51.687572, -60.158750, 3000);
-LtpPosition geoToLtp = pc.GeoToLtp(target, origin);
+LlaPosition origin = new LlaPosition(-51.736538, -59.430458, 0);
+LlaPosition target = new LlaPosition(-51.687572, -60.158750, 3000);
+LtpPosition geoToLtp = pc.LlaToLtp(target, origin);
 Console.WriteLine(geoToLtp.ToStringNed());
 Console.WriteLine(geoToLtp.ToStringEnu());
 
@@ -52,12 +52,12 @@ Console.WriteLine(geoToLtp.ToStringEnu());
 // East: -50387.38398064566, North: 5199.166000297293, Up: 2799.350897683762
 ```
 
-**Convert two geo-position points to Azimuth elevation range**
+**Convert two Lla-position points to Azimuth elevation range**
 ```
 var pc = new PositionConverter();
-GeoPosition origin = GeoPosition.FromDeg(4.682880, -7.965253, 0);
-GeoPosition target = GeoPosition.FromDeg(4.782880, -7.985253, 3000);
-var azimuthElevationRange = pc.GeoToAer(origin,target );
+LlaPosition origin = new LlaPosition(4.682880, -7.965253, 0);
+LlaPosition target = new LlaPosition(4.782880, -7.985253, 3000);
+var azimuthElevationRange = pc.LlaToAer(origin,target );
 Console.WriteLine(azimuthElevationRange);
 
 // Prints
@@ -67,7 +67,7 @@ Console.WriteLine(azimuthElevationRange);
 **Convert local tangent plane to ECEF**
 ```
 var pv = new PositionConverter();
-GeoPosition origin = GeoPosition.FromDeg(4.682880, -7.965253, 0);
+LlaPosition origin = new LlaPosition(4.682880, -7.965253, 0);
 LtpPosition ltpPosition = new LtpPosition(100.0, 200.0, 300.0);
 EcefPosition ecef = pv.LtpToEcef(ltpPosition, origin);
 Console.WriteLine(ecef);

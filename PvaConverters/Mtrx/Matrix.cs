@@ -7,8 +7,8 @@ namespace PvaConverters.Mtrx
     public class Matrix
     {
         private List<double> m_data = new List<double>();
-        private int          m_rows;
-        private int          m_columns;
+        private int m_rows;
+        private int m_columns;
 
         internal Matrix(double[] array, int rows, int columns)
         {

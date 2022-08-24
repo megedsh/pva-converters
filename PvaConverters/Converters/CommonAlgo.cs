@@ -6,26 +6,24 @@ namespace PvaConverters.Converters
 {
     public class CommonAlgo
     {
-        public static Vector3d TransformNedToEcef(double north, double east, double down, GeoPosition origin)
-        {
-            double x = north;
-            double y = east;
-            double z = down;
+        private static readonly double s_piTo180 = (Math.PI / 180.0);
 
+        public static void TransformNedToEcef(double north, double east, double down, LlaPosition origin,
+            out double x, out double y, out double z)
+        {
             Matrix T = GeoPositionToEcefMatrix(origin);
 
-            double ex = T[0, 0] * x + T[0, 1] * y + T[0, 2] * z;
-            double ey = T[1, 0] * x + T[1, 1] * y + T[1, 2] * z;
-            double ez = T[2, 0] * x + T[2, 1] * y + T[2, 2] * z;
-            return new Vector3d(ex, ey, ez);
+            x = T[0, 0] * north + T[0, 1] * east + T[0, 2] * down;
+            y = T[1, 0] * north + T[1, 1] * east + T[1, 2] * down;
+            z = T[2, 0] * north + T[2, 1] * east + T[2, 2] * down;
         }
 
-        public static Matrix GeoPositionToEcefMatrix(GeoPosition origin)
+        public static Matrix GeoPositionToEcefMatrix(LlaPosition origin)
         {
             double[,] matrix = new double[3, 3];
 
-            double lat = origin.Latitude.Radians;
-            double lon = origin.Longitude.Radians;
+            double lat = origin.Latitude * s_piTo180;
+            double lon = origin.Longitude * s_piTo180;
 
             double cosLat = Math.Cos(lat);
             double sinLat = Math.Sin(lat);

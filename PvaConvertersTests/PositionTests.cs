@@ -3,7 +3,6 @@ using PvaConverters.Model;
 using PvaConverters.Model.AzimuthElevation;
 using PvaConverters.Model.Ecef;
 using PvaConverters.Model.LocalTangentPlane;
-using PvaConverters.Model.Scalars;
 
 namespace PvaConvertersTests
 {
@@ -24,57 +23,68 @@ namespace PvaConvertersTests
         };
 
         [Test]
-        public void GeoToEcef()
+        public void Test1()
+        {
+            var pc = new PositionConverter();
+            LlaPosition origin = new LlaPosition(32.18, 34.89, 1000);
+            EcefPosition ecefPosition = new EcefPosition(4431798.0, 3091247.0, 3378380.0);
+            LtpPosition ltp = m_subject.EcefToLtp(ecefPosition, origin);
+            Console.WriteLine(ltp.ToStringNed());
+        }
+
+
+        [Test]
+        public void LlaToEcef()
         {
             foreach (var testVector in m_testVectors)
             {
-                var lat = Angle.FromDegrees(testVector.Latitude);
-                var lon = Angle.FromDegrees(testVector.Longitude);
-                GeoPosition geo = new GeoPosition(lat, lon, Distance.FromMeters(testVector.Altitude));
+                var lat = testVector.Latitude;
+                var lon = testVector.Longitude;
+                LlaPosition lla = new LlaPosition(lat, lon, testVector.Altitude);
 
-                EcefPosition ecef = m_subject.GeoToEcef(geo);
+                EcefPosition ecef = m_subject.LlaToEcef(lla);
                 Assert.That(ecef, Is.EqualTo(new EcefPosition(testVector.ExpectedX, testVector.ExpectedY, testVector.ExpectedZ)));
 
-                var geo2 = m_subject.EcefToGeo(ecef);
-                assertEquals(geo, geo2);
+                var geo2 = m_subject.EcefToLla(ecef);
+                assertEquals(lla, geo2);
             }
         }
 
         [Test]
-        public void GeoToLtp()
+        public void LlaToLtp()
         {
-            GeoPosition contextGeoPosition = GeoPosition.FromDeg(-51.736538, -59.430458, 0);
-            GeoPosition orgGeoPosition = GeoPosition.FromDeg(-51.687572, -60.158750, 3000);
+            LlaPosition contextLlaPosition = new LlaPosition(-51.736538, -59.430458, 0);
+            LlaPosition orgLlaPosition = new LlaPosition(-51.687572, -60.158750, 3000);
 
-            LtpPosition ltp = m_subject.GeoToLtp(orgGeoPosition, contextGeoPosition);
+            LtpPosition ltp = m_subject.LlaToLtp(orgLlaPosition, contextLlaPosition);
 
             assertLtp(ltp, 5199.1660, -50387.3839, -2799.35089);
 
-            GeoPosition geoPosition = m_subject.LtpToGeo(ltp, contextGeoPosition);
-            assertEquals(orgGeoPosition, geoPosition);
+            LlaPosition llaPosition = m_subject.LtpToLla(ltp, contextLlaPosition);
+            assertEquals(orgLlaPosition, llaPosition);
         }
 
         [Test]
-        public void GeoToAer()
+        public void LlaToAer()
         {
-            GeoPosition origin = GeoPosition.FromDeg(-51.687572, -60.158750, 3000);
+            LlaPosition origin = new LlaPosition(-51.687572, -60.158750, 3000);
             AzimuthElevationRange[] testVector =
             {
-                new AzimuthElevationRange(Angle.FromDegrees(10), Angle.FromDegrees(10), Distance.FromMeters(1000)),
-                new AzimuthElevationRange(Angle.FromDegrees(10), Angle.Zero, Distance.FromMeters(1000)),
-                new AzimuthElevationRange(Angle.FromDegrees(10), Angle.FromDegrees(10), Distance.FromMeters(1)),
+                new AzimuthElevationRange(10, 10, 1000),
+                new AzimuthElevationRange(10, 0, 1000),
+                new AzimuthElevationRange(10, 10, 1),
             };
 
             foreach (AzimuthElevationRange aer in testVector)
             {
-                GeoPosition geoPos = m_subject.AerToGeo(origin, aer);
-                var actual = m_subject.GeoToAer(origin, geoPos);
+                LlaPosition llaPos = m_subject.AerToLla(origin, aer);
+                var actual = m_subject.LlaToAer(origin, llaPos);
 
 
                 double delta = 1e-3;
                 Assert.AreEqual(aer.Azimuth, actual.Azimuth, delta);
                 Assert.AreEqual(aer.Elevation, actual.Elevation, delta);
-                Assert.AreEqual(aer.Range.Meters, actual.Range.Meters, delta);
+                Assert.AreEqual(aer.Distance, actual.Distance, delta);
             }
         }
 
@@ -82,13 +92,13 @@ namespace PvaConvertersTests
         [Test]
         public void LtpToEcef()
         {
-            GeoPosition origin = GeoPosition.FromDeg(-51.736538, -59.430458, 0);
-            GeoPosition target = GeoPosition.FromDeg(-51.687572, -60.158750, 3000);
+            LlaPosition origin = new LlaPosition(-51.736538, -59.430458, 0);
+            LlaPosition target = new LlaPosition(-51.687572, -60.158750, 3000);
 
-            LtpPosition ned = m_subject.GeoToLtp(target, origin);
+            LtpPosition ned = m_subject.LlaToLtp(target, origin);
 
             EcefPosition ecef1 = m_subject.LtpToEcef(ned, origin);
-            EcefPosition ecef2 = m_subject.GeoToEcef(target);
+            EcefPosition ecef2 = m_subject.LlaToEcef(target);
 
             assertEquals(ecef1, ecef2);
         }
@@ -97,10 +107,10 @@ namespace PvaConvertersTests
         [Test]
         public void LtpToAer()
         {
-            GeoPosition origin = GeoPosition.FromDeg(-51.736538, -59.430458, 0);
-            GeoPosition target = GeoPosition.FromDeg(-51.687572, -60.158750, 3000);
+            LlaPosition origin = new LlaPosition(-51.736538, -59.430458, 0);
+            LlaPosition target = new LlaPosition(-51.687572, -60.158750, 3000);
 
-            LtpPosition ned = m_subject.GeoToLtp(target, origin);
+            LtpPosition ned = m_subject.LlaToLtp(target, origin);
 
             AzimuthElevationRange aer1 = m_subject.LtpToAer(ned);
             EcefPosition ecef = m_subject.LtpToEcef(ned, origin);
@@ -111,31 +121,31 @@ namespace PvaConvertersTests
         [Test]
         public void EcefToLtp()
         {
-            GeoPosition origin = GeoPosition.FromDeg(-51.736538, -59.430458, 0);
-            GeoPosition target = GeoPosition.FromDeg(-51.687572, -60.158750, 3000);
+            LlaPosition origin = new LlaPosition(-51.736538, -59.430458, 0);
+            LlaPosition target = new LlaPosition(-51.687572, -60.158750, 3000);
 
-            var targetEcef = m_subject.GeoToEcef(target);
+            var targetEcef = m_subject.LlaToEcef(target);
 
             var ltp1 = m_subject.EcefToLtp(targetEcef, origin);
-            var ltp2 = m_subject.GeoToLtp(target, origin);
+            var ltp2 = m_subject.LlaToLtp(target, origin);
 
 
             assertEquals(ltp1, ltp2);
         }
 
 
-        private void assertLtp(ILocalTangentPlane<Distance> ned, double north, double east, double down)
+        private void assertLtp(ILocalTangentPlane ned, double north, double east, double down)
         {
-            Assert.That(ned.North.Meters, Is.EqualTo(north).Within(0.0001));
-            Assert.That(ned.East.Meters, Is.EqualTo(east).Within(0.0001));
-            Assert.That(ned.Down.Meters, Is.EqualTo(down).Within(0.0001));
+            Assert.That(ned.North, Is.EqualTo(north).Within(0.0001));
+            Assert.That(ned.East, Is.EqualTo(east).Within(0.0001));
+            Assert.That(ned.Down, Is.EqualTo(down).Within(0.0001));
         }
 
-        private void assertEquals(GeoPosition orgGeoPosition, GeoPosition geoPosition)
+        private void assertEquals(LlaPosition orgLlaPosition, LlaPosition llaPosition)
         {
-            Assert.IsTrue(Math.Abs(orgGeoPosition.Altitude.Meters - geoPosition.Altitude.Meters) < 0.0001);
-            Assert.IsTrue(Math.Abs(orgGeoPosition.Longitude.Degrees - geoPosition.Longitude.Degrees) < 0.00001);
-            Assert.IsTrue(Math.Abs(orgGeoPosition.Latitude.Degrees - geoPosition.Latitude.Degrees) < 0.00001);
+            Assert.IsTrue(Math.Abs(orgLlaPosition.Altitude - llaPosition.Altitude) < 0.0001);
+            Assert.IsTrue(Math.Abs(orgLlaPosition.Longitude - llaPosition.Longitude) < 0.00001);
+            Assert.IsTrue(Math.Abs(orgLlaPosition.Latitude - llaPosition.Latitude) < 0.00001);
         }
 
         private void assertEquals(EcefPosition ecef1, EcefPosition ecef2)
@@ -145,23 +155,21 @@ namespace PvaConvertersTests
             Assert.IsTrue(Math.Abs(ecef1.Z - ecef2.Z) < 0.00001);
         }
 
-        private void assertEquals<T>(AzimuthElevationBase<T> aer1, AzimuthElevationBase<T> aer2)
-            where T : IScalar
+        private void assertEquals(IAzimuthElevation aer1, IAzimuthElevation aer2)
         {
             Assert.IsTrue(Math.Abs(aer1.Azimuth - aer2.Azimuth) < 0.0001);
             Assert.IsTrue(Math.Abs(aer1.Elevation - aer2.Elevation) < 0.00001);
-            Assert.IsTrue(Math.Abs(aer1.Scalar.AsDouble() - aer2.Scalar.AsDouble()) < 0.00001);
+            Assert.IsTrue(Math.Abs(aer1.GetScalar() - aer2.GetScalar()) < 0.00001);
         }
 
-        private void assertEquals<T>(ILocalTangentPlane<T> ltp1, ILocalTangentPlane<T> ltp2)
-            where T : IScalar
+        private void assertEquals(ILocalTangentPlane ltp1, ILocalTangentPlane ltp2)
         {
-            Assert.IsTrue(Math.Abs(ltp1.North.AsDouble() - ltp2.North.AsDouble()) < 0.0001);
-            Assert.IsTrue(Math.Abs(ltp1.South.AsDouble() - ltp2.South.AsDouble()) < 0.0001);
-            Assert.IsTrue(Math.Abs(ltp1.East.AsDouble() - ltp2.East.AsDouble()) < 0.0001);
-            Assert.IsTrue(Math.Abs(ltp1.West.AsDouble() - ltp2.West.AsDouble()) < 0.0001);
-            Assert.IsTrue(Math.Abs(ltp1.Up.AsDouble() - ltp2.Up.AsDouble()) < 0.0001);
-            Assert.IsTrue(Math.Abs(ltp1.Down.AsDouble() - ltp2.Down.AsDouble()) < 0.0001);
+            Assert.IsTrue(Math.Abs(ltp1.North - ltp2.North) < 0.0001);
+            Assert.IsTrue(Math.Abs(ltp1.South - ltp2.South) < 0.0001);
+            Assert.IsTrue(Math.Abs(ltp1.East - ltp2.East) < 0.0001);
+            Assert.IsTrue(Math.Abs(ltp1.West - ltp2.West) < 0.0001);
+            Assert.IsTrue(Math.Abs(ltp1.Up - ltp2.Up) < 0.0001);
+            Assert.IsTrue(Math.Abs(ltp1.Down - ltp2.Down) < 0.0001);
         }
     }
 

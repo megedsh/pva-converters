@@ -2,20 +2,14 @@
 using PvaConverters.Model.Aeronautical;
 using PvaConverters.Model.Ecef;
 using PvaConverters.Model.LocalTangentPlane;
-using PvaConverters.Model.Scalars;
 
 namespace PvaConverters.Converters
 {
-    public class AccelerationConverter : CartesianBase<LtpAcceleration, EcefAcceleration, Acceleration, AeronauticalAcceleration>, IAccelerationConverter
+    public class AccelerationConverter : CartesianBase<LtpAcceleration, EcefAcceleration, AeronauticalAcceleration>, IAccelerationConverter
     {
-        protected override Acceleration createScalar(double arg)
+        protected override AeronauticalAcceleration createAeronauticalVector(double courseDeg, double vertical, double horizontal)
         {
-            return Acceleration.FromMetersPerSquareSecond(arg);
-        }
-
-        protected override AeronauticalAcceleration createAeronauticalVector(Angle course, Acceleration vertical, Acceleration horizontal)
-        {
-            return new AeronauticalAcceleration(course, vertical, horizontal);
+            return new AeronauticalAcceleration(courseDeg, vertical, horizontal);
         }
 
         protected override LtpAcceleration createLtp(double north, double east, double down)
