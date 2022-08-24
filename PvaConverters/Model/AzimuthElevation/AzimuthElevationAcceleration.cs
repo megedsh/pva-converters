@@ -2,6 +2,7 @@
 {
     public struct AzimuthElevationAcceleration : IAzimuthElevation
     {
+        public static AzimuthElevationAcceleration Empty = new AzimuthElevationAcceleration(double.NaN, double.NaN, double.NaN);
         public double Acceleration { get; }
         public double Azimuth { get; }
         public double Elevation { get; }

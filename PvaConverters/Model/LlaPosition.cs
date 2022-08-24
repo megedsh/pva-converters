@@ -2,6 +2,7 @@ namespace PvaConverters.Model
 {
     public readonly struct LlaPosition
     {
+        public static LlaPosition Empty = new LlaPosition(double.NaN, double.NaN, double.NaN);
         public double Latitude { get; }
         public double Longitude { get; }
         public double Altitude { get; }

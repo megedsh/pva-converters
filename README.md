@@ -57,7 +57,7 @@ Console.WriteLine(geoToLtp.ToStringEnu());
 var pc = new PositionConverter();
 LlaPosition origin = new LlaPosition(4.682880, -7.965253, 0);
 LlaPosition target = new LlaPosition(4.782880, -7.985253, 3000);
-var azimuthElevationRange = pc.LlaToAer(origin,target );
+var azimuthElevationRange = pc.LlaToAed(origin,target );
 Console.WriteLine(azimuthElevationRange);
 
 // Prints

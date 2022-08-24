@@ -128,7 +128,7 @@ namespace PvaConverters.Converters
             down = -vertical;
         }
 
-        private static Matrix calcRzC(AzimuthElevationRange raePos)
+        private static Matrix calcRzC(AzimuthElevationDistance raePos)
         {
             double c = raePos.Azimuth * s_piTo180;
             double[,] v =
@@ -141,7 +141,7 @@ namespace PvaConverters.Converters
             return new Matrix(v);
         }
 
-        private static Matrix calcRyB(AzimuthElevationRange raePos)
+        private static Matrix calcRyB(AzimuthElevationDistance raePos)
         {
             double b = raePos.Elevation * s_piTo180;
             double[,] v =

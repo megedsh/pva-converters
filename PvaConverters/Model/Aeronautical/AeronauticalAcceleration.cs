@@ -2,6 +2,7 @@
 {
     public struct AeronauticalAcceleration : IAeronauticalVector
     {
+        public static AeronauticalAcceleration Empty = new AeronauticalAcceleration(double.NaN, double.NaN, double.NaN);
         public AeronauticalAcceleration(double courseDeg, double climbMetersPerSquareSec, double groundMetersPerSquareSec)
         {
             Course = courseDeg;

@@ -65,20 +65,20 @@ namespace PvaConvertersTests
         }
 
         [Test]
-        public void LlaToAer()
+        public void LlaToAed()
         {
             LlaPosition origin = new LlaPosition(-51.687572, -60.158750, 3000);
-            AzimuthElevationRange[] testVector =
+            AzimuthElevationDistance[] testVector =
             {
-                new AzimuthElevationRange(10, 10, 1000),
-                new AzimuthElevationRange(10, 0, 1000),
-                new AzimuthElevationRange(10, 10, 1),
+                new AzimuthElevationDistance(10, 10, 1000),
+                new AzimuthElevationDistance(10, 0, 1000),
+                new AzimuthElevationDistance(10, 10, 1),
             };
 
-            foreach (AzimuthElevationRange aer in testVector)
+            foreach (AzimuthElevationDistance aer in testVector)
             {
-                LlaPosition llaPos = m_subject.AerToLla(origin, aer);
-                var actual = m_subject.LlaToAer(origin, llaPos);
+                LlaPosition llaPos = m_subject.AedToLla(origin, aer);
+                var actual = m_subject.LlaToAed(origin, llaPos);
 
 
                 double delta = 1e-3;
@@ -105,16 +105,16 @@ namespace PvaConvertersTests
 
 
         [Test]
-        public void LtpToAer()
+        public void LtpToAed()
         {
             LlaPosition origin = new LlaPosition(-51.736538, -59.430458, 0);
             LlaPosition target = new LlaPosition(-51.687572, -60.158750, 3000);
 
             LtpPosition ned = m_subject.LlaToLtp(target, origin);
 
-            AzimuthElevationRange aer1 = m_subject.LtpToAer(ned);
+            AzimuthElevationDistance aer1 = m_subject.LtpToAed(ned);
             EcefPosition ecef = m_subject.LtpToEcef(ned, origin);
-            AzimuthElevationRange aer2 = m_subject.EcefToAer(ecef, origin);
+            AzimuthElevationDistance aer2 = m_subject.EcefToAed(ecef, origin);
             assertEquals(aer1, aer2);
         }
 

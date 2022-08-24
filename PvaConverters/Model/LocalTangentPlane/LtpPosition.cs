@@ -2,6 +2,7 @@
 {
     public struct LtpPosition : ILocalTangentPlane
     {
+        public static LtpPosition Empty = new LtpPosition(double.NaN, double.NaN, double.NaN);
         public double East { get; }
         public double West { get; }
         public double North { get; }

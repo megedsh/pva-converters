@@ -1,27 +1,28 @@
 ﻿namespace PvaConverters.Model.AzimuthElevation
 {
-    public struct AzimuthElevationRange : IAzimuthElevation
+    public struct AzimuthElevationDistance : IAzimuthElevation
     {
+        public static AzimuthElevationDistance Empty = new AzimuthElevationDistance(double.NaN, double.NaN, double.NaN);
         public double Distance { get; }
         public double Azimuth { get; }
         public double Elevation { get; }
         public double GetScalar() => Distance;
 
-        public AzimuthElevationRange(double azimuthDeg, double elevationDeg, double distanceMeters)
+        public AzimuthElevationDistance(double azimuthDeg, double elevationDeg, double distanceMeters)
         {
             Azimuth = azimuthDeg;
             Elevation = elevationDeg;
             Distance = distanceMeters;
         }
 
-        public bool Equals(AzimuthElevationRange other)
+        public bool Equals(AzimuthElevationDistance other)
         {
             return Azimuth.Equals(other.Azimuth) && Elevation.Equals(other.Elevation) && Distance.Equals(other.Distance);
         }
 
         public override bool Equals(object obj)
         {
-            return obj is AzimuthElevationRange other && Equals(other);
+            return obj is AzimuthElevationDistance other && Equals(other);
         }
 
         public override int GetHashCode()

@@ -17,11 +17,11 @@ namespace PvaConverters.Converters
         public LlaPosition LtpToLla(LtpPosition ltpPosition, LlaPosition origin, Datum datum = null) => ltpToLla(ltpPosition, origin, datum);
         public EcefPosition LtpToEcef(LtpPosition ltpPosition, LlaPosition origin, Datum datum = null) => ltpToEcef(ltpPosition, origin, datum);
 
-        public AzimuthElevationRange LtpToAer(LtpPosition ltpPosition)
+        public AzimuthElevationDistance LtpToAed(LtpPosition ltpPosition)
         {
             fromCartesian3DToPolar3D(ltpPosition.North, ltpPosition.East, ltpPosition.Up, out double alphaRadians, out double betaRadians, out double r);
 
-            return new AzimuthElevationRange(alphaRadians / s_piTo180, betaRadians / s_piTo180, r);
+            return new AzimuthElevationDistance(alphaRadians / s_piTo180, betaRadians / s_piTo180, r);
         }
 
         #endregion
@@ -67,12 +67,12 @@ namespace PvaConverters.Converters
             return ecefToLtp(ecef, origin, datum);
         }
 
-        public AzimuthElevationRange LlaToAer(LlaPosition origin, LlaPosition target, Datum datum = null)
+        public AzimuthElevationDistance LlaToAed(LlaPosition origin, LlaPosition target, Datum datum = null)
         {
             LtpPosition ltp = LlaToLtp(target, origin, datum);
             fromCartesian3DToPolar3D(ltp.North, ltp.East, ltp.Up, out double alphaRadians, out double betaRadians, out double r);
 
-            return new AzimuthElevationRange(alphaRadians / s_piTo180, betaRadians / s_piTo180, r);
+            return new AzimuthElevationDistance(alphaRadians / s_piTo180, betaRadians / s_piTo180, r);
         }
 
         #endregion
@@ -111,41 +111,41 @@ namespace PvaConverters.Converters
             return new LlaPosition(lat / s_piTo180, lon / s_piTo180, alt);
         }
 
-        public AzimuthElevationRange EcefToAer(EcefPosition target, LlaPosition origin, Datum datum = null)
+        public AzimuthElevationDistance EcefToAed(EcefPosition target, LlaPosition origin, Datum datum = null)
         {
             LtpPosition ltp = EcefToLtp(target, origin, datum);
 
             fromCartesian3DToPolar3D(ltp.North, ltp.East, ltp.Up, out double alphaRadians, out double betaRadians, out double r);
 
-            return new AzimuthElevationRange(alphaRadians / s_piTo180, betaRadians / s_piTo180, r);
+            return new AzimuthElevationDistance(alphaRadians / s_piTo180, betaRadians / s_piTo180, r);
         }
 
         #endregion
 
-        #region AzimuthElevationRange
+        #region AzimuthElevationDistance
 
-        public EcefPosition AerToEcef(LlaPosition origin, AzimuthElevationRange azimuthElevationRange, Datum datum = null)
+        public EcefPosition AedToEcef(LlaPosition origin, AzimuthElevationDistance azimuthElevationDistance, Datum datum = null)
         {
-            LlaPosition lla = AerToLla(origin, azimuthElevationRange, datum);
+            LlaPosition lla = AedToLla(origin, azimuthElevationDistance, datum);
             return LlaToEcef(lla);
         }
 
 
-        public LlaPosition AerToLla(LlaPosition origin, AzimuthElevationRange azimuthElevationRange, Datum datum = null)
+        public LlaPosition AedToLla(LlaPosition origin, AzimuthElevationDistance azimuthElevationDistance, Datum datum = null)
         {
-            fromPolar3DToCartesian3D(getNotNaN(azimuthElevationRange.Azimuth * s_piTo180),
-                getNotNaN(azimuthElevationRange.Elevation * s_piTo180),
-                getNotNaN(azimuthElevationRange.Distance, 1),
+            fromPolar3DToCartesian3D(getNotNaN(azimuthElevationDistance.Azimuth * s_piTo180),
+                getNotNaN(azimuthElevationDistance.Elevation * s_piTo180),
+                getNotNaN(azimuthElevationDistance.Distance, 1),
                 out double x, out double y, out double z);
 
             return ltpToLla(new LtpPosition(x, y, -z), origin);
         }
 
-        public LtpPosition AerToLtp(LlaPosition origin, AzimuthElevationRange azimuthElevationRange, Datum datum = null)
+        public LtpPosition AedToLtp(LlaPosition origin, AzimuthElevationDistance azimuthElevationDistance, Datum datum = null)
         {
-            fromPolar3DToCartesian3D(getNotNaN(azimuthElevationRange.Azimuth * s_piTo180),
-                getNotNaN(azimuthElevationRange.Elevation * s_piTo180),
-                getNotNaN(azimuthElevationRange.Distance, 1),
+            fromPolar3DToCartesian3D(getNotNaN(azimuthElevationDistance.Azimuth * s_piTo180),
+                getNotNaN(azimuthElevationDistance.Elevation * s_piTo180),
+                getNotNaN(azimuthElevationDistance.Distance, 1),
                 out double x, out double y, out double z);
 
             return new LtpPosition(x, y, -z);

@@ -2,6 +2,7 @@
 {
     public struct LtpVelocity : ILocalTangentPlane
     {
+        public static LtpVelocity Empty = new LtpVelocity(double.NaN, double.NaN, double.NaN);
         public double East { get; }
         public double West { get; }
         public double North { get; }
