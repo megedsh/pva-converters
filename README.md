@@ -1,4 +1,4 @@
-# Position, Velocity, Acceleration Converters
+# NavigationToolkit
 
 ## Position Converters
 Convert between 4 types of geographical coordinates systems.
